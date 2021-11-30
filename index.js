@@ -39,9 +39,7 @@ function processSchema(schema) {
     Object.keys(schema._typeMap).forEach(element => {
         let type = schema._typeMap[element];
         if (!type.name.startsWith('__')) {
-            let instance = '';
             if (type instanceof graphql.GraphQLObjectType) {
-                instance = 'object';
                 if (type.name == 'PrivateQuery') {
                     types.PrivateQuery = type;
                 } else if (type.name == 'PrivateMutation') {
@@ -50,19 +48,14 @@ function processSchema(schema) {
                     objects[type.name] = type;
                 }
             } else if (type instanceof graphql.GraphQLInterfaceType) {
-                instance = 'interface';
                 interfaces[type.name] = type;
             } else if (type instanceof graphql.GraphQLUnionType) {
-                instance = 'union';
                 unions[type.name] = type;
             } else if (type instanceof graphql.GraphQLScalarType) {
-                instance = 'scalar';
                 scalars[type.name] = type;
             } else if (type instanceof graphql.GraphQLEnumType) {
-                instance = 'enum';
                 enums[type.name] = type;
             } else if (type instanceof graphql.GraphQLInputObjectType) {
-                instance = 'input';
                 inputs[type.name] = type;
             }
         }
