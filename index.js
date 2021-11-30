@@ -62,10 +62,10 @@ function processSchema(schema) {
     });
 
     Object.keys(types.objects).forEach(element => {
-        let e = types.objects[element];
-        generateSchemaFor(types.objects[element], types);
-        generateDaoFor(types.objects[element], schema, types);
-        generateStoreFor(types.objects[element], schema, types);
+        let type = types.objects[element];
+        generateSchemaFor(type, types);
+        generateDaoFor(type);
+        generateStoreFor(type, schema, types);
     });
 }
 
@@ -189,7 +189,7 @@ function camelize(str) {
     }).replace(/\s+/g, '');
 }
 
-function generateDaoFor(type, schema, types) {
+function generateDaoFor(type) {
     // Para o DAO, podemos pegar apenas os exports de cada type e gerar tudo... sem olhar o schema do Graphql, uma vez que os exports foram gerados baseados neles...
     let name = type.name;
     let nameLower = name.toLowerCase();
