@@ -1,0 +1,877 @@
+schema {
+  query: PrivateQuery
+  mutation: PrivateMutation
+}
+
+"""
+
+"""
+input ConditionObjectInput {
+  """
+
+  """
+  value: JSON!
+
+  """
+
+  """
+  column: String!
+
+  """
+
+  """
+  operator: OperatorTypeEnum!
+}
+
+"""
+Office
+"""
+type Office {
+  """
+
+  """
+  dsEmail: EmailAddress!
+
+  """
+
+  """
+  dsOffice: NullString
+
+  """
+
+  """
+  dtCreated: DateTime!
+
+  """
+
+  """
+  dtUpdated: DateTime!
+
+  """
+
+  """
+  idClient: UUID!
+
+  """
+
+  """
+  idOffice: UUID!
+
+  """
+
+  """
+  nmContact: String!
+
+  """
+
+  """
+  nmOffice: String!
+
+  """
+
+  """
+  obOffice: JSON
+
+  """
+
+  """
+  stOffice: RecordStatusEnum!
+}
+
+"""
+Tag
+"""
+type Tag {
+  """
+
+  """
+  cdTag: String!
+
+  """
+
+  """
+  dsTag: String!
+
+  """
+
+  """
+  dtCreated: DateTime!
+
+  """
+
+  """
+  dtUpdated: DateTime!
+
+  """
+
+  """
+  idClient: UUID!
+
+  """
+
+  """
+  idOffice: UUID!
+
+  """
+
+  """
+  idTag: UUID!
+}
+
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf)
+"""
+scalar JSON
+
+"""
+A valid email address
+"""
+scalar EmailAddress
+
+"""
+File
+"""
+type File {
+  """
+
+  """
+  dsMime: String!
+
+  """
+
+  """
+  dtCreated: DateTime!
+
+  """
+
+  """
+  dtUpdated: DateTime!
+
+  """
+
+  """
+  idClient: NullUUID
+
+  """
+
+  """
+  idEntity: UUID!
+
+  """
+
+  """
+  idFile: UUID!
+
+  """
+
+  """
+  idRecord: UUID!
+
+  """
+
+  """
+  nbSize: Int!
+
+  """
+
+  """
+  nmFile: String!
+}
+
+"""
+Entity
+"""
+type Entity {
+  """
+
+  """
+  dtCreated: DateTime!
+
+  """
+
+  """
+  dtUpdated: DateTime!
+
+  """
+
+  """
+  idEntity: UUID!
+
+  """
+
+  """
+  nmEntity: String!
+}
+
+"""
+UUID is nullable
+"""
+scalar NullUUID
+
+"""
+A valid universally unique identifier
+"""
+scalar UUID
+
+"""
+String is a nullable string
+"""
+scalar NullString
+
+"""
+Admin
+"""
+type Admin {
+  """
+
+  """
+  dsEmail: EmailAddress!
+
+  """
+
+  """
+  dsToken: String!
+
+  """
+
+  """
+  dtCreated: DateTime!
+
+  """
+
+  """
+  dtUpdated: DateTime!
+
+  """
+
+  """
+  idAdmin: UUID!
+
+  """
+
+  """
+  nmAdmin: String!
+
+  """
+
+  """
+  obAdmin: JSON
+
+  """
+
+  """
+  stAdmin: RecordStatusEnum!
+}
+
+"""
+
+"""
+input OfficeInput {
+  """
+
+  """
+  dsEmail: EmailAddress!
+
+  """
+
+  """
+  dsOffice: NullString
+
+  """
+
+  """
+  nmOffice: String!
+
+  """
+
+  """
+  nmContact: String!
+}
+
+"""
+Private GraphQL Queries
+"""
+type PrivateQuery {
+  """
+
+  """
+  Admins(idAdmin: UUID, obClause: ClauseObjectInput): [Admin]
+
+  """
+
+  """
+  Clients(obClause: ClauseObjectInput, idClient: UUID): [Client]
+
+  """
+
+  """
+  Context: Context
+
+  """
+
+  """
+  Entities(idEntity: UUID, obClause: ClauseObjectInput): [Entity]
+
+  """
+
+  """
+  Files(
+    idFile: UUID
+    idRecord: UUID
+    idEntity: UUID
+    obClause: ClauseObjectInput
+  ): [File]
+
+  """
+
+  """
+  Goals(obClause: ClauseObjectInput, idGoal: UUID): [Goal]
+
+  """
+
+  """
+  Me: Admin
+
+  """
+
+  """
+  Segments(idSegment: UUID, obClause: ClauseObjectInput): [Segment]
+
+  """
+
+  """
+  Tags(idTag: UUID, idRecord: UUID): [Tag]
+
+  """
+
+  """
+  Token: Boolean
+}
+
+"""
+
+"""
+enum OperatorTypeEnum {
+  """
+
+  """
+  in
+
+  """
+
+  """
+  gt
+
+  """
+
+  """
+  gte
+
+  """
+
+  """
+  lt
+
+  """
+
+  """
+  not_in
+
+  """
+
+  """
+  not_equal
+
+  """
+
+  """
+  not_like
+
+  """
+
+  """
+  equal
+
+  """
+
+  """
+  lte
+
+  """
+
+  """
+  like
+}
+
+"""
+
+"""
+input PaginationObjectInput {
+  """
+
+  """
+  limit: Int!
+
+  """
+
+  """
+  offset: Int!
+}
+
+"""
+
+"""
+enum RecordStatusEnum {
+  """
+
+  """
+  active
+
+  """
+
+  """
+  inactive
+}
+
+"""
+Context
+"""
+type Context {
+  """
+
+  """
+  ContextAdmin: Admin
+}
+
+"""
+Segment
+"""
+type Segment {
+  """
+
+  """
+  dsSegment: NullString
+
+  """
+
+  """
+  dtCreated: DateTime!
+
+  """
+
+  """
+  dtUpdated: DateTime!
+
+  """
+
+  """
+  idSegment: UUID!
+
+  """
+
+  """
+  nmSegment: String!
+
+  """
+
+  """
+  obSegment: JSON
+
+  """
+
+  """
+  stSegment: RecordStatusEnum!
+}
+
+"""
+
+"""
+input ClauseObjectInput {
+  """
+
+  """
+  conditions: [ConditionObjectInput]
+
+  """
+
+  """
+  order: [OrderByObjectInput]
+
+  """
+
+  """
+  group: GroupByObjectInput
+
+  """
+
+  """
+  pagination: PaginationObjectInput
+
+  """
+
+  """
+  select: [SelectObjectInput]
+}
+
+"""
+
+"""
+input OrderByObjectInput {
+  """
+
+  """
+  column: String!
+
+  """
+
+  """
+  sort: SortTypeEnum
+}
+
+"""
+
+"""
+input GroupByObjectInput {
+  """
+
+  """
+  columns: [String]
+}
+
+"""
+The `DateTime` scalar type represents a DateTime. The DateTime is serialized as an RFC 3339 quoted string
+"""
+scalar DateTime
+
+"""
+Goal
+"""
+type Goal {
+  """
+
+  """
+  dsGoal: NullString
+
+  """
+
+  """
+  dtCreated: DateTime!
+
+  """
+
+  """
+  dtUpdated: DateTime!
+
+  """
+
+  """
+  idGoal: UUID!
+
+  """
+
+  """
+  nmGoal: String!
+}
+
+"""
+
+"""
+input AdminObjectInput {
+  """
+
+  """
+  avatar: String
+}
+
+"""
+
+"""
+enum SortTypeEnum {
+  """
+
+  """
+  asc
+
+  """
+
+  """
+  desc
+}
+
+"""
+
+"""
+input SelectObjectInput {
+  """
+
+  """
+  column: String!
+
+  """
+
+  """
+  function: AggregateTypeEnum
+
+  """
+
+  """
+  alias: String
+}
+
+"""
+
+"""
+enum AggregateTypeEnum {
+  """
+
+  """
+  count
+
+  """
+
+  """
+  max
+
+  """
+
+  """
+  min
+
+  """
+
+  """
+  sum
+
+  """
+
+  """
+  avg
+}
+
+"""
+Client
+"""
+type Client {
+  """
+
+  """
+  ClientOffices(idOffice: UUID, obClause: ClauseObjectInput): [Office]
+
+  """
+
+  """
+  dsClient: NullString
+
+  """
+
+  """
+  dtCreated: DateTime!
+
+  """
+
+  """
+  dtUpdated: DateTime!
+
+  """
+
+  """
+  flKeyAccount: Boolean!
+
+  """
+
+  """
+  idClient: UUID!
+
+  """
+
+  """
+  nmClient: String!
+
+  """
+
+  """
+  obClient: JSON!
+
+  """
+
+  """
+  stClient: RecordStatusEnum!
+}
+
+"""
+Private GraphQL Mutations
+"""
+type PrivateMutation {
+  """
+
+  """
+  AddAdmin(idRole: UUID!, nmAdmin: String!, obAdmin: AdminObjectInput): Admin
+
+  """
+
+  """
+  AddClient(
+    dsClient: NullString
+    flKeyAccount: Boolean!
+    obOffices: [OfficeInput]
+    nmClient: String!
+  ): Client
+
+  """
+
+  """
+  AddFile(
+    idFile: UUID!
+    idEntity: UUID!
+    idRecord: UUID!
+    flCompress: Boolean = true
+  ): File
+
+  """
+
+  """
+  AddGoal(nmGoal: String!, dsGoal: NullString): Goal
+
+  """
+
+  """
+  AddOffice(
+    dsEmail: EmailAddress!
+    dsOffice: NullString
+    idClient: UUID!
+    nmOffice: String!
+    nmContact: String!
+  ): Office
+
+  """
+
+  """
+  AddSegment(nmSegment: String!, dsSegment: NullString): Segment
+
+  """
+
+  """
+  ChangePassword(dsOld: String!, dsNew: String!): Admin
+
+  """
+
+  """
+  CopyFile(idFile: UUID!, idEntity: UUID!, idRecord: UUID!): File
+
+  """
+
+  """
+  DelAdmin(idAdmin: UUID!): Admin
+
+  """
+
+  """
+  DelClient(idClient: UUID!): Client
+
+  """
+
+  """
+  DelFile(idFile: UUID!): File
+
+  """
+
+  """
+  DelGoal(idGoal: UUID!): Goal
+
+  """
+
+  """
+  DelOffice(idOffice: UUID!): Office
+
+  """
+
+  """
+  DelSegment(idSegment: UUID!): Segment
+
+  """
+
+  """
+  DelTag(idTag: UUID!): [Tag]
+
+  """
+
+  """
+  Me: Admin
+
+  """
+
+  """
+  MoveFile(idRecord: UUID!, idFile: UUID!, idEntity: UUID!): File
+
+  """
+
+  """
+  RenameFile(idFile: UUID!, nmFile: String!): File
+
+  """
+
+  """
+  ReplaceFile(
+    idOld: UUID!
+    idNew: UUID!
+    nmFile: String!
+    flCompress: Boolean = true
+  ): File
+
+  """
+
+  """
+  SetAdmin(nmAdmin: String!, obAdmin: AdminObjectInput): Admin
+
+  """
+
+  """
+  SetAdminStatus(idAdmin: String!, stAdmin: RecordStatusEnum!): Admin
+
+  """
+
+  """
+  SetClient(
+    idClient: UUID!
+    nmClient: String!
+    dsClient: NullString = "{ false}"
+    flKeyAccount: Boolean!
+    stClient: RecordStatusEnum!
+  ): Client
+
+  """
+
+  """
+  SetGoal(idGoal: UUID!, nmGoal: String!, dsGoal: NullString = "{ false}"): Goal
+
+  """
+
+  """
+  SetOffice(
+    stOffice: RecordStatusEnum!
+    idOffice: UUID!
+    nmOffice: String!
+    nmContact: String!
+    dsEmail: EmailAddress!
+    dsOffice: NullString = "{ false}"
+  ): Office
+
+  """
+
+  """
+  SetSegment(
+    idSegment: UUID!
+    nmSegment: String!
+    dsSegment: NullString = "{ false}"
+  ): Segment
+
+  """
+
+  """
+  SetTag(idEntity: UUID!, obTags: [String], idRecord: UUID!): [Tag]
+
+  """
+
+  """
+  SignOut: Boolean
+}

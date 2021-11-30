@@ -1,0 +1,16 @@
+{
+  "name": "gql2store",
+  "version": "1.0.0",
+  "description": "Creates the store from a GraphQL schema - the BCJ store way",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "type": "module",
+  "keywords": [],
+  "author": "Richard Natal",
+  "license": "MIT",
+  "dependencies": {
+    "graphql": "^16.0.1"
+  }
+}
