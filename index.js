@@ -88,7 +88,7 @@ function generateSchemaFor(type, types) {
     let data = getHeaderSchemaStringFor(type) +
         getQueriesSchemaStringFor(type, types) +
         getMutationSchemaStringFor(type, types);
-    writeFile(path.join(process.cwd(), 'tmp', 'schema', camel2kebab(camelize(name)) + '.schema.js'), data, 'utf8', (err) => {
+    writeFile(path.join(process.cwd(), 'tmp', 'schema', camel2kebab(camelize(name)) + '.schema.ts'), data, 'utf8', (err) => {
         if (err) {
             console.log('Error writing file: ' + err);
         }
@@ -273,7 +273,7 @@ ${type.mutations.map(e => {
     },\n\n`;
     }).join('')}
 };`;
-    writeFile(path.join(p, camel2kebab(camelize(name)) + '.dao.js'), data, 'utf8', (err) => {
+    writeFile(path.join(p, camel2kebab(camelize(name)) + '.dao.ts'), data, 'utf8', (err) => {
         if (err) {
             console.log('Error writing file: ' + err);
         }
@@ -430,7 +430,7 @@ export default {
 	mutations,
 };
 `;
-    writeFile(path.join(p, camel2kebab(nameCamel) + '.js'), data, 'utf8', (err) => {
+    writeFile(path.join(p, camel2kebab(nameCamel) + '.ts'), data, 'utf8', (err) => {
         if (err) {
             console.log('Error writing file: ' + err);
         }
@@ -465,7 +465,7 @@ export const FETCH_${typePluralName.toUpperCase()} = '[${typePluralName}] fetch 
 export const DELETE_${nameUpper} = '[${nameCamel}] delete ${nameCamel}';\n\n`;
     }).join('\n')}\n`;
     
-    writeFile(path.join(p, 'mutations.js'), data, 'utf8', (err) => {
+    writeFile(path.join(p, 'mutations.ts'), data, 'utf8', (err) => {
         if (err) {
             console.log('Error writing file: ' + err);
         }

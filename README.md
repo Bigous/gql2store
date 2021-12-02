@@ -16,45 +16,68 @@ Run the script:
 node index.js ./examples/sdl.gql
 ```
 
-It will generate the following files iside the `./tmp` folder:
+It will generate the following files inside the `./tmp` folder:
 
 ```powershell
-Mode                LastWriteTime         Length Name
-----                -------------         ------ ----
-d----        30/11/2021     04:31                  daos
-d----        30/11/2021     04:31                  schema
-
-        Directory: .\tmp\daos
+        Directory: ...\gql2store\tmp
 
 
 Mode                LastWriteTime         Length Name
 ----                -------------         ------ ----
--a---        30/11/2021     04:31           3216   admin.dao.js
--a---        30/11/2021     04:31           1746   client.dao.js
--a---        30/11/2021     04:31            603   context.dao.js
--a---        30/11/2021     04:31            607   entity.dao.js
--a---        30/11/2021     04:31           2839   file.dao.js
--a---        30/11/2021     04:31           1678   goal.dao.js
--a---        30/11/2021     04:31           1370   office.dao.js
--a---        30/11/2021     04:31           1780   segment.dao.js
--a---        30/11/2021     04:31           1286   tag.dao.js
+d----        02/12/2021     20:21                  daos
+d----        02/12/2021     20:21                  schema
+d----        02/12/2021     20:21                  store
 
-        Directory: .\tmp\schema
+        Directory: ...\gql2store\tmp\daos
 
 
 Mode                LastWriteTime         Length Name
 ----                -------------         ------ ----
--a---        30/11/2021     04:31            839   admin.schema.js
--a---        30/11/2021     04:31            755   client.schema.js
--a---        30/11/2021     04:31            247   context.schema.js
--a---        30/11/2021     04:31            328   entity.schema.js
--a---        30/11/2021     04:31            958   file.schema.js
--a---        30/11/2021     04:31            547   goal.schema.js
--a---        30/11/2021     04:31            707   office.schema.js
--a---        30/11/2021     04:31            625   segment.schema.js
--a---        30/11/2021     04:31            466   tag.schema.js
+-a---        02/12/2021     20:21           3216   admin.dao.ts
+-a---        02/12/2021     20:21           1746   client.dao.ts
+-a---        02/12/2021     20:21            603   context.dao.ts
+-a---        02/12/2021     20:21            607   entity.dao.ts
+-a---        02/12/2021     20:21           2839   file.dao.ts
+-a---        02/12/2021     20:21           1678   goal.dao.ts
+-a---        02/12/2021     20:21           1370   office.dao.ts
+-a---        02/12/2021     20:21           1780   segment.dao.ts
+-a---        02/12/2021     20:21           1286   tag.dao.ts
+
+        Directory: ...\gql2store\tmp\schema
+
+
+Mode                LastWriteTime         Length Name
+----                -------------         ------ ----
+-a---        02/12/2021     20:21            837   admin.schema.ts
+-a---        02/12/2021     20:21            820   client.schema.ts
+-a---        02/12/2021     20:21            312   context.schema.ts
+-a---        02/12/2021     20:21            326   entity.schema.ts
+-a---        02/12/2021     20:21            956   file.schema.ts
+-a---        02/12/2021     20:21            545   goal.schema.ts
+-a---        02/12/2021     20:21            705   office.schema.ts
+-a---        02/12/2021     20:21            623   segment.schema.ts
+-a---        02/12/2021     20:21            464   tag.schema.ts
+
+        Directory: ...\gql2store\tmp\store
+
+
+Mode                LastWriteTime         Length Name
+----                -------------         ------ ----
+d----        02/12/2021     20:21                  modules
+-a---        02/12/2021     20:21           1527   mutations.ts
+
+        Directory: ...\gql2store\tmp\store\modules
+
+
+Mode                LastWriteTime         Length Name
+----                -------------         ------ ----
+-a---        02/12/2021     20:21           3533   admin.ts
+-a---        02/12/2021     20:21           2605   client.ts
+-a---        02/12/2021     20:21           1842   context.ts
+-a---        02/12/2021     20:21           1767   entity.ts
+-a---        02/12/2021     20:21           3256   file.ts
+-a---        02/12/2021     20:21           2455   goal.ts
+-a---        02/12/2021     20:21           2300   office.ts
+-a---        02/12/2021     20:21           2587   segment.ts
+-a---        02/12/2021     20:21           2157   tag.ts
 ```
-
-## TODO
-
-The store files is not implemented yet.
