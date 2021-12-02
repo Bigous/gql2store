@@ -1,5 +1,6 @@
 import path from 'path';
 import graphql from 'graphql';
+import pluralize from 'pluralize';
 import { argv } from 'process';
 import { existsSync, readFileSync, writeFile, mkdirSync } from 'fs';
 //import graphqlHTTP from 'express-graphql';
@@ -61,12 +62,19 @@ function processSchema(schema) {
         }
     });
 
-    Object.keys(types.objects).forEach(element => {
+    let to = Object.keys(types.objects);
+
+    console.log('Generating schema files for types: ' + to.join(', '));
+
+    to.forEach(element => {
         let type = types.objects[element];
         generateSchemaFor(type, types);
         generateDaoFor(type);
-        generateStoreFor(type, schema, types);
+        generateStoreFor(type, types);
     });
+    generateStoreMutationsFor(types);
+
+    console.log('Done');
 }
 
 function generateSchemaFor(type, types) {
@@ -80,7 +88,7 @@ function generateSchemaFor(type, types) {
     let data = getHeaderSchemaStringFor(type) +
         getQueriesSchemaStringFor(type, types) +
         getMutationSchemaStringFor(type, types);
-    writeFile(path.join(process.cwd(), 'tmp', 'schema', nameLower + '.schema.js'), data, 'utf8', (err) => {
+    writeFile(path.join(process.cwd(), 'tmp', 'schema', camel2kebab(camelize(name)) + '.schema.js'), data, 'utf8', (err) => {
         if (err) {
             console.log('Error writing file: ' + err);
         }
@@ -93,17 +101,41 @@ function getHeaderSchemaStringFor(type) {
     let name = type.name;
     let nameLower = name.toLowerCase();
     let nameUpper = name.toUpperCase();
+    let nameCamel = camelize(name);
     let id = fields.find(element => {
         let e = element.toLowerCase();
         return e.startsWith('id') && e.endsWith(nameLower);
     });
+    type.id = id;
+    let dependencies = type.getFields();
+    type.dependencies = dependencies = fields.filter(element => {
+        let type = dependencies[element].type;
+        return (type instanceof graphql.GraphQLObjectType) || (type instanceof graphql.GraphQLList);
+    }).map(element => {
+        return {
+            fieldName: element,
+            typeName: dependencies[element].type instanceof graphql.GraphQLObjectType ? dependencies[element].type.name : dependencies[element].type.ofType.name
+        };
+    });
     let data = `
 import { schema } from 'normalizr';
-
-export const ${nameUpper}_SCHEMA = new schema.Entity('${nameLower}', {}, { idAttribute: '${id}' });
+${
+    dependencies.map(element => {
+        return `import { ${element.typeName.toUpperCase()}_SCHEMA } from './${element.typeName.toLowerCase()}.schema';`;
+    }).join('\n') + (dependencies.length > 0 ? '\n' : '')
+}
+export const ${nameUpper}_SCHEMA = new schema.Entity('${nameCamel}', {${
+        dependencies.map(element => {
+            return `\n\t${element.fieldName}: [${element.typeName.toUpperCase()}_SCHEMA],`;
+        }).join('') + (dependencies.length > 0 ? '\n' : '')
+}}, { idAttribute: '${id}' });
 
 export const ${name}GQL = \`
-  ${fields.join('\n  ')}
+  ${fields.filter(e => {
+      // Here we filter out the fields that are object or list of objects. This happens because we wanna query the graphql for this fields only when we need them and not all the time.
+      let t = type.getFields();
+      return !(t[e].type instanceof graphql.GraphQLObjectType || t[e].type instanceof graphql.GraphQLList);
+  }).join('\n  ')}
 \`;
     `;
 
@@ -125,7 +157,7 @@ export const ${name}GQL = \`
 function getQueriesSchemaStringFor(type, types) {
     let queries = types.PrivateQuery;
 
-    let data = '\n// Queries\n\n';
+    let data = '\n// Queries\n';
 
     // Fields no PrivateQuery são as queries disponíveis no graphql.
     let fields = queries.getFields();
@@ -153,7 +185,7 @@ function getQueriesSchemaStringFor(type, types) {
 function getMutationSchemaStringFor(type, types) {
     let mutations = types.PrivateMutation;
 
-    let data = '\n// Mutations\n\n';
+    let data = '\n// Mutations\n';
 
     // Fields no PrivateMutation são as mutations disponíveis no graphql.
     let fields = mutations.getFields();
@@ -189,6 +221,10 @@ function camelize(str) {
     }).replace(/\s+/g, '');
 }
 
+function camel2kebab(str) {
+    return str.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+}
+
 function generateDaoFor(type) {
     // Para o DAO, podemos pegar apenas os exports de cada type e gerar tudo... sem olhar o schema do Graphql, uma vez que os exports foram gerados baseados neles...
     let name = type.name;
@@ -209,7 +245,7 @@ import { argsToString, argsToParamsString } from '../utils/graphql';
 
 export default {
 ${type.queries.map(e => {
-        let funcName = camelize('Get'+e.gqlQueryName);
+        let funcName = camelize('Get '+e.gqlQueryName);
         let gqlName = e.gqlQueryName;
         return `\t${funcName}(variables) {
         const qry = gql\`
@@ -237,13 +273,201 @@ ${type.mutations.map(e => {
     },\n\n`;
     }).join('')}
 };`;
-    writeFile(path.join(p, nameLower + '.dao.js'), data, 'utf8', (err) => {
+    writeFile(path.join(p, camel2kebab(camelize(name)) + '.dao.js'), data, 'utf8', (err) => {
         if (err) {
             console.log('Error writing file: ' + err);
         }
     });
 }
 
-function generateStoreFor(type, schema, types) {
-    // TODO: Implementar o Store.
+function generateStoreFor(type, types) {
+    let name = type.name;
+    let nameLower = name.toLowerCase();
+    let nameUpper = name.toUpperCase();
+    let nameCamel = camelize(name);
+    let p = path.join(process.cwd(), 'tmp', 'store', 'modules');
+    if (!existsSync(p)) {
+        console.log('Creating directory: ' + p);
+        mkdirSync(p, { recursive: true });
+    }
+
+    let queryNames = type.queries.map(e => e.gqlQueryName);
+    let mutationNames = type.mutations.map(e => e.gqlMutationName);
+
+    // let typePluralName = camelize(queryNames.filter(e => e.toUpperCase().startsWith(nameUpper)).join(''));
+    // if(nameCamel.endsWith('s'))
+    //     typePluralName = nameCamel + 'es';
+    // else
+    //     typePluralName = nameCamel + 's';
+    let typePluralName = pluralize(nameCamel);
+
+    let data = `import { normalize } from 'normalizr';
+import _ from 'lodash';
+import bcjGraphMerge from '../../utils/bcj-graph-merge';
+
+import dao from '../../daos/${nameLower}.dao';
+import { ${nameUpper}_SCHEMA } from '../../schema/${nameLower}.schema';
+import errorHandler from '../../utils/error-handler';
+import * as types from '../mutations';
+
+const initialState = {
+	${typePluralName}: {},
+	ids: [],
+};
+
+const actions = {
+
+	${camelize('fetch '+ typePluralName)}({ commit }, { entities }) {
+		if (!entities.${nameCamel}) return null;
+
+		const ids = Object.keys(entities.${nameCamel});
+        ${type.dependencies.map(e => {
+            let depName = e.typeName;
+            let depNameUpper = depName.toUpperCase();
+            let depNameCamel = camelize(depName);
+            let depType = types.objects[depName];
+            let depQueryNames = depType.queries.map(e => e.gqlQueryName);
+            // let depTypePluralName = camelize(depQueryNames.filter(e => e.toUpperCase().startsWith(depNameUpper)).join(''));
+            // if(!depTypePluralName) {
+            //     if(depNameCamel.endsWith('s'))
+            //         depTypePluralName = depNameCamel + 'es';
+            //     else
+            //         depTypePluralName = depNameCamel + 's';
+            // }
+            let depTypePluralName = pluralize(depNameCamel);
+            return `\n\t\tif(entities.${depNameCamel}) dispatch('${camelize('fetch ' + depTypePluralName)}', { entities });`;
+        }).join('')}
+            
+		// fetch ${typePluralName}
+		commit(types.FETCH_${typePluralName.toUpperCase()}, { entities, result: ids });
+
+		// return ${typePluralName}
+		return ids.map(id => entities.${nameCamel}[id]);
+	},
+
+    // Queries
+
+    ${queryNames.map(e => {
+        let funcName = camelize('Get '+e);
+        return `${funcName}({ dispatch }, args) {
+        return dao.${funcName}(args)
+            .then(res => normalize(res, [${nameUpper}_SCHEMA]))
+            .then(({ entities }) => dispatch('${camelize('fetch ' + e)}', { entities }))
+            .catch(errorHandler);
+    },`}).join('\n\n\t')}
+
+    // Mutations
+
+    ${mutationNames.filter(n => {
+        return !n.toUpperCase().startsWith('DEL');
+    }).map(e => {
+        let funcName = camelize(e);
+        return `${funcName}({ dispatch }, args) {
+        return dao.${funcName}(args)
+            .then(res => normalize(res, ${nameUpper}_SCHEMA)) // normalize
+            .then(({ entities }) => dispatch('${camelize('fetch ' + e)}', { entities })) // fetch
+            .catch(errorHandler);
+    },`
+    }).join('\n\n\t')}
+
+    ${mutationNames.filter(n => {
+        return n.toUpperCase().startsWith('DEL');
+    }).map(e => {
+        let funcName = camelize(e);
+        return `${funcName}({ commit }, args) {
+        return dao.${funcName}(args)
+            .then(res => {
+                // remove from store
+                commit(types.DELETE_${nameUpper.toUpperCase()}, res);
+                return res;
+            })
+            .catch(errorHandler);
+    },`
+    }).join('\n\n\t')}
+
+};
+
+// getters always use the state from the store.
+
+const getters = {
+
+	${typePluralName}: (state, rootGetters) => state.ids
+		.map((id) => {
+			const ${nameCamel} = state.${typePluralName}[id];
+
+			return ${nameCamel};
+		}),
+
+	${camelize('get ' + name)}ById: (state, rootGetters) =>
+		${type.id} =>
+			rootGetters.${typePluralName}.find(v => v.${type.id} === ${type.id}),
+
+};
+
+const mutations = {
+
+	[types.FETCH_${typePluralName.toUpperCase()}](state, { entities, result }) {
+		state.ids = _.union(state.ids, result);
+		bcjGraphMerge(state.${typePluralName}, entities.${nameCamel});
+	},
+
+	[types.DELETE_${nameUpper}](state, { ${type.id} }) {
+		state.ids = state.ids.filter(id => id !== ${type.id});
+		delete state.${typePluralName}[${type.id}];
+	},
+
+	[types.WIPE_STORE](state) {
+		state.${typePluralName} = {};
+		state.ids = [];
+	},
+
+};
+
+export default {
+	state: initialState,
+	actions,
+	getters,
+	mutations,
+};
+`;
+    writeFile(path.join(p, camel2kebab(nameCamel) + '.js'), data, 'utf8', (err) => {
+        if (err) {
+            console.log('Error writing file: ' + err);
+        }
+    });
+}
+
+function generateStoreMutationsFor(types) {
+    let p = path.join(process.cwd(), 'tmp', 'store');
+    if (!existsSync(p)) {
+        console.log('Creating directory: ' + p);
+        mkdirSync(p, { recursive: true });
+    }
+    let orderedTypeNames = Object.keys(types.objects).sort();
+
+    let data = `${orderedTypeNames.map(e => {
+        let nameUpper = e.toUpperCase();
+        let nameCamel = camelize(e);
+        let type = types.objects[e];
+        let queryNames = type.queries.map(e => e.gqlQueryName);
+        // let typePluralName = camelize(queryNames.filter(f => f.toUpperCase().startsWith(nameUpper)).join(''));
+        // if(!typePluralName) {
+        //     if(nameCamel.endsWith('s'))
+        //         typePluralName = nameCamel + 'es';
+        //     else
+        //         typePluralName = nameCamel + 's';
+        // }
+        let typePluralName = pluralize(nameCamel);
+
+        return `// ${e}
+export const FETCH_${nameUpper} = '[${nameCamel}] fetch ${nameCamel}';
+export const FETCH_${typePluralName.toUpperCase()} = '[${typePluralName}] fetch ${typePluralName}';
+export const DELETE_${nameUpper} = '[${nameCamel}] delete ${nameCamel}';\n\n`;
+    }).join('\n')}\n`;
+    
+    writeFile(path.join(p, 'mutations.js'), data, 'utf8', (err) => {
+        if (err) {
+            console.log('Error writing file: ' + err);
+        }
+    });
 }

@@ -11,6 +11,7 @@
   "author": "Richard Natal",
   "license": "MIT",
   "dependencies": {
-    "graphql": "^16.0.1"
+    "graphql": "^16.0.1",
+    "pluralize": "^8.0.0"
   }
 }
