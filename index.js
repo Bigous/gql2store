@@ -28,6 +28,16 @@ if (existsSync(argv[2])) {
     process.exit(1);
 }
 
+function camelize(str) {
+    return str.replace(/(?:^\w|[A-Z]|\b\w)/g, function (word, index) {
+        return index === 0 ? word.toLowerCase() : word.toUpperCase();
+    }).replace(/\s+/g, '');
+}
+
+function camel2kebab(str) {
+    return str.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+}
+
 function processSchema(schema) {
     console.log('Processing schema');
     let scalars = {};
@@ -46,6 +56,15 @@ function processSchema(schema) {
                 } else if (type.name == 'PrivateMutation') {
                     types.PrivateMutation = type;
                 } else {
+                    if (!type.exports)
+                        type.exports = [];
+                
+                    if(!type.queries)
+                        type.queries = [];
+                    
+                    if(!type.mutations)
+                        type.mutations = [];
+            
                     objects[type.name] = type;
                 }
             } else if (type instanceof graphql.GraphQLInterfaceType) {
@@ -140,16 +159,7 @@ export const ${name}GQL = \`
     `;
 
     // Para facilitar a geração do código de imports nos DAOs, os exports do schema são guardados no type em questão chamando de exports.
-    if (!type.exports)
-        type.exports = [];
-
     type.exports.push(`${name}GQL`);
-
-    if(!type.queries)
-        type.queries = [];
-    
-    if(!type.mutations)
-        type.mutations = [];
 
     return data;
 }
@@ -213,16 +223,6 @@ function getMutationSchemaStringFor(type, types) {
     });
 
     return data;
-}
-
-function camelize(str) {
-    return str.replace(/(?:^\w|[A-Z]|\b\w)/g, function (word, index) {
-        return index === 0 ? word.toLowerCase() : word.toUpperCase();
-    }).replace(/\s+/g, '');
-}
-
-function camel2kebab(str) {
-    return str.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
 }
 
 function generateDaoFor(type) {
@@ -294,11 +294,6 @@ function generateStoreFor(type, types) {
     let queryNames = type.queries.map(e => e.gqlQueryName);
     let mutationNames = type.mutations.map(e => e.gqlMutationName);
 
-    // let typePluralName = camelize(queryNames.filter(e => e.toUpperCase().startsWith(nameUpper)).join(''));
-    // if(nameCamel.endsWith('s'))
-    //     typePluralName = nameCamel + 'es';
-    // else
-    //     typePluralName = nameCamel + 's';
     let typePluralName = pluralize(nameCamel);
 
     let data = `import { normalize } from 'normalizr';
@@ -326,14 +321,6 @@ const actions = {
             let depNameUpper = depName.toUpperCase();
             let depNameCamel = camelize(depName);
             let depType = types.objects[depName];
-            let depQueryNames = depType.queries.map(e => e.gqlQueryName);
-            // let depTypePluralName = camelize(depQueryNames.filter(e => e.toUpperCase().startsWith(depNameUpper)).join(''));
-            // if(!depTypePluralName) {
-            //     if(depNameCamel.endsWith('s'))
-            //         depTypePluralName = depNameCamel + 'es';
-            //     else
-            //         depTypePluralName = depNameCamel + 's';
-            // }
             let depTypePluralName = pluralize(depNameCamel);
             return `\n\t\tif(entities.${depNameCamel}) dispatch('${camelize('fetch ' + depTypePluralName)}', { entities });`;
         }).join('')}
@@ -448,15 +435,6 @@ function generateStoreMutationsFor(types) {
     let data = `${orderedTypeNames.map(e => {
         let nameUpper = e.toUpperCase();
         let nameCamel = camelize(e);
-        let type = types.objects[e];
-        let queryNames = type.queries.map(e => e.gqlQueryName);
-        // let typePluralName = camelize(queryNames.filter(f => f.toUpperCase().startsWith(nameUpper)).join(''));
-        // if(!typePluralName) {
-        //     if(nameCamel.endsWith('s'))
-        //         typePluralName = nameCamel + 'es';
-        //     else
-        //         typePluralName = nameCamel + 's';
-        // }
         let typePluralName = pluralize(nameCamel);
 
         return `// ${e}
