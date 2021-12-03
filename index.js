@@ -312,7 +312,7 @@ const initialState = {
 
 const actions = {
 
-	${camelize('fetch '+ typePluralName)}({ commit }, { entities }) {
+	${camelize('fetch '+ typePluralName)}({ commit${type.dependencies.length ? ', dispatch' : ''} }, { entities }) {
 		if (!entities.${nameCamel}) return null;
 
 		const ids = Object.keys(entities.${nameCamel});
@@ -432,7 +432,10 @@ function generateStoreMutationsFor(types) {
     }
     let orderedTypeNames = Object.keys(types.objects).sort();
 
-    let data = `${orderedTypeNames.map(e => {
+    let data = `// base
+export const WIPE_STORE = '[base] wipe store';
+
+${orderedTypeNames.map(e => {
         let nameUpper = e.toUpperCase();
         let nameCamel = camelize(e);
         let typePluralName = pluralize(nameCamel);
