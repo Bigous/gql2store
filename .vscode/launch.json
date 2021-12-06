@@ -13,7 +13,7 @@
                 "./examples/sdl.gql"
             ],
             "cwd": "${workspaceRoot}",
-            "stopOnEntry": true,
+            "stopOnEntry": false,
             "env": {
                 "NODE_ENV": "development"
             }
