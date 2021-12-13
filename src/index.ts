@@ -7,6 +7,7 @@ import { loadSchema } from './SDLLoader';
 import { SchemaGenerator } from './SchemaGenerator';
 import { DaoGenerator } from './DaoGenerator';
 import { StoreGenerator } from './StoreGenerator';
+import { TypesGenerator } from './TypesGenerator';
 
 path.basename(process.cwd());
 
@@ -43,7 +44,8 @@ function generateFilesFrom(sdlFileName: string) {
 	console.log('Generating schema files for types: ' + to.join(', '));
 
 	let sg = new StoreGenerator();
-	let generators = [new SchemaGenerator(), new DaoGenerator(), sg];
+    let tg = new TypesGenerator();
+	let generators = [new SchemaGenerator(), new DaoGenerator(), sg, tg];
 
 	to.forEach(element => {
 		let type = types.objects[element];
@@ -52,6 +54,7 @@ function generateFilesFrom(sdlFileName: string) {
 		});
 	});
 	sg.generateStoreMutationsFor(types);
+    tg.generateIndexFor(types);
 
 	console.log('Done');
 }

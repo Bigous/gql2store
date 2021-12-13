@@ -2,7 +2,7 @@ import pluralize from 'pluralize';
 import path from 'node:path'
 import { FileGenerator } from "./FileGenerator";
 import { SDLObjectType, SDLProcessedSchema } from "./types/definitions";
-import { camel2kebab, camelize } from "./utils";
+import { camelize } from "./utils";
 import { existsSync, mkdirSync, writeFile } from 'node:fs';
 
 export class StoreGenerator extends FileGenerator {
