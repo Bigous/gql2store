@@ -1,4 +1,4 @@
-import graphql from "graphql";
+import { GraphQLEnumType, GraphQLInputObjectType, GraphQLInterfaceType, GraphQLObjectType, GraphQLScalarType, GraphQLUnionType } from "graphql";
 
 export interface SDLDependency {
     fieldName: string;
@@ -10,7 +10,7 @@ export interface SDLDependant {
     fieldName: string;
 }
 
-export interface SDLObjectType extends graphql.GraphQLObjectType {
+export interface SDLObjectType extends GraphQLObjectType {
     id?:string;
     dependencies: SDLDependency[];
     dependantTypes: SDLDependant[];
@@ -19,12 +19,12 @@ export interface SDLObjectType extends graphql.GraphQLObjectType {
     mutations: { gqlMutationName: string, argsName: string }[];
 };
 
-export interface SDLScalarTypeMap { [name: string]: graphql.GraphQLScalarType };
+export interface SDLScalarTypeMap { [name: string]: GraphQLScalarType };
 export interface SDLObjectTypeMap { [name: string]: SDLObjectType };
-export interface SDLInterfaceTypeMap { [name: string]: graphql.GraphQLInterfaceType };
-export interface SDLUnionTypeMap { [name: string]: graphql.GraphQLUnionType };
-export interface SDLEnumTypeMap { [name: string]: graphql.GraphQLEnumType };
-export interface SDLInputTypeMap { [name: string]: graphql.GraphQLInputObjectType };
+export interface SDLInterfaceTypeMap { [name: string]: GraphQLInterfaceType };
+export interface SDLUnionTypeMap { [name: string]: GraphQLUnionType };
+export interface SDLEnumTypeMap { [name: string]: GraphQLEnumType };
+export interface SDLInputTypeMap { [name: string]: GraphQLInputObjectType };
 
 export interface SDLProcessedSchema {
     scalars: SDLScalarTypeMap;
@@ -33,8 +33,8 @@ export interface SDLProcessedSchema {
     unions: SDLUnionTypeMap;
     enums: SDLEnumTypeMap;
     inputs: SDLInputTypeMap;
-    PrivateQuery?: graphql.GraphQLObjectType;
-    PrivateMutation?: graphql.GraphQLObjectType;
+    PrivateQuery?: GraphQLObjectType;
+    PrivateMutation?: GraphQLObjectType;
 };
 
 export interface SDLGenerator {

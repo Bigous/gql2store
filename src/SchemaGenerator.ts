@@ -1,4 +1,4 @@
-import graphql from "graphql";
+import { GraphQLList, GraphQLNonNull, GraphQLObjectType } from "graphql";
 import { FileGenerator } from "./FileGenerator";
 import { SDLObjectType, SDLProcessedSchema } from "./types/definitions";
 import { camelize } from "./utils";
@@ -43,7 +43,7 @@ export const ${name}GQL = \`
   ${fields.filter(e => {
 			// Here we filter out the fields that are object or list of objects. This happens because we wanna query the graphql for this fields only when we need them and not all the time.
 			let t = type.getFields();
-			return !(t[e].type instanceof graphql.GraphQLObjectType || t[e].type instanceof graphql.GraphQLList);
+			return !(t[e].type instanceof GraphQLObjectType || t[e].type instanceof GraphQLList);
 		}).join('\n  ')}
 \`;
 `;
@@ -66,8 +66,8 @@ function getQueriesSchemaStringFor(type: SDLObjectType, types: SDLProcessedSchem
 		let e = fields[eName];
 		// Pegamos apenas aquelas que retornam um objeto do tipo que estamos analisando (type) 
 		// ou que retornam um array de objetos do tipo que estamos analisando (type).
-		if ((e.type instanceof graphql.GraphQLObjectType && e.type.name == type.name) ||
-			(e.type instanceof graphql.GraphQLList && (e.type as graphql.GraphQLList<graphql.GraphQLObjectType>).ofType.name == type.name)) {
+		if ((e.type instanceof GraphQLObjectType && e.type.name == type.name) ||
+			(e.type instanceof GraphQLList && (e.type as GraphQLList<GraphQLObjectType>).ofType.name == type.name)) {
 			let name = `Get${e.name}Args`;
 
 			// TODO: Remover any
@@ -96,14 +96,14 @@ function getMutationSchemaStringFor(type: SDLObjectType, types: SDLProcessedSche
 		let e = fields[eName];
 		// Pegamos apenas aquelas que retornam um objeto do tipo que estamos analisando (type)
 		// ou que retornam um array de objetos do tipo que estamos analisando (type).
-		if ((e.type instanceof graphql.GraphQLObjectType && e.type.name == type.name) ||
-			(e.type instanceof graphql.GraphQLList && (e.type as graphql.GraphQLList<graphql.GraphQLObjectType>).ofType.name == type.name)) {
+		if ((e.type instanceof GraphQLObjectType && e.type.name == type.name) ||
+			(e.type instanceof GraphQLList && (e.type as GraphQLList<GraphQLObjectType>).ofType.name == type.name)) {
 			let name = `${e.name}Args`;
 			let args = e.args.map(a => {
 				let typeName = (a.type as any).name;
-				if (a.type instanceof graphql.GraphQLNonNull)
+				if (a.type instanceof GraphQLNonNull)
 					typeName = `${(a.type.ofType as any).name}!`;
-				else if (a.type instanceof graphql.GraphQLList)
+				else if (a.type instanceof GraphQLList)
 					typeName = `[${(a.type.ofType as any).name}]`;
 				return `  ${a.name}: '${typeName}',\n`;
 			});

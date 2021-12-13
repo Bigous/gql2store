@@ -1,27 +1,27 @@
-import graphql, { GraphQLOutputType } from 'graphql';
+import { buildSchema, GraphQLObjectType, GraphQLList, GraphQLInterfaceType, GraphQLUnionType, GraphQLScalarType, GraphQLEnumType, GraphQLInputObjectType } from 'graphql';
 import { readFileSync } from 'node:fs';
 
 import { SDLObjectType, SDLObjectTypeMap, SDLProcessedSchema } from './types/definitions';
 
 
-function generateDependeciyRelations(objects: SDLObjectTypeMap) : void {
+function generateDependeciyRelations(objects: SDLObjectTypeMap): void {
 	let ok = Object.keys(objects);
 	ok.forEach(typeName => {
 		let type = objects[typeName];
 		let fields = type.getFields();
 		type.dependencies = Object.keys(fields).filter(element => {
 			let t = fields[element].type;
-			return (t instanceof graphql.GraphQLObjectType) || (t instanceof graphql.GraphQLList);
+			return (t instanceof GraphQLObjectType) || (t instanceof GraphQLList);
 		}).map(element => {
 			return {
 				fieldName: element,
-				typeName: fields[element].type instanceof graphql.GraphQLObjectType ? (fields[element].type as SDLObjectType).name : (fields[element].type as graphql.GraphQLList<graphql.GraphQLObjectType>).ofType.name
+				typeName: fields[element].type instanceof GraphQLObjectType ? (fields[element].type as SDLObjectType).name : (fields[element].type as GraphQLList<GraphQLObjectType>).ofType.name
 			};
 		});
 	});
 }
 
-function generateCrossReference(objects: SDLObjectTypeMap) : void {
+function generateCrossReference(objects: SDLObjectTypeMap): void {
 	let ok = Object.keys(objects);
 	ok.forEach(typeName1 => {
 		let type = objects[typeName1];
@@ -38,7 +38,7 @@ function generateCrossReference(objects: SDLObjectTypeMap) : void {
 	});
 }
 
-function generateFragments(objects: SDLObjectTypeMap) : void {
+function generateFragments(objects: SDLObjectTypeMap): void {
 	let ok = Object.keys(objects);
 	// TODO: need to be correctly implemented
 	ok.forEach(typeName => {
@@ -46,9 +46,9 @@ function generateFragments(objects: SDLObjectTypeMap) : void {
 		let fields = Object.keys(type.getFields()).filter(fieldName => {
 			let field = type.getFields()[fieldName];
 			let typeField = undefined;
-			if (field.type instanceof graphql.GraphQLObjectType) {
+			if (field.type instanceof GraphQLObjectType) {
 				typeField = objects[fieldName];
-			} else if (field.type instanceof graphql.GraphQLList && field.type.ofType instanceof graphql.GraphQLObjectType) {
+			} else if (field.type instanceof GraphQLList && field.type.ofType instanceof GraphQLObjectType) {
 				typeField = objects[field.type.ofType.name];
 			} else {
 				return false;
@@ -65,7 +65,7 @@ function generateFragments(objects: SDLObjectTypeMap) : void {
  * @returns SDLProcessedSchema with the processed schema.
  */
 export function loadSchema(sdlFileName: string): SDLProcessedSchema {
-	const schema = graphql.buildSchema(readFileSync(sdlFileName, 'utf8'));
+	const schema = buildSchema(readFileSync(sdlFileName, 'utf8'));
 
 	let types: SDLProcessedSchema = {
 		scalars: {},
@@ -81,7 +81,7 @@ export function loadSchema(sdlFileName: string): SDLProcessedSchema {
 	Object.keys(typeMap).forEach(element => {
 		let type = typeMap[element];
 		if (!type.name.startsWith('__')) {
-			if (type instanceof graphql.GraphQLObjectType) {
+			if (type instanceof GraphQLObjectType) {
 				let object: SDLObjectType = type as SDLObjectType;
 				if (object.name == 'PrivateQuery') {
 					types.PrivateQuery = type;
@@ -97,23 +97,23 @@ export function loadSchema(sdlFileName: string): SDLProcessedSchema {
 					if (!object.mutations)
 						object.mutations = [];
 
-					if(!object.dependencies)
+					if (!object.dependencies)
 						object.dependencies = [];
-					
-					if(!object.dependantTypes)
+
+					if (!object.dependantTypes)
 						object.dependantTypes = [];
 
 					types.objects[type.name] = object;
 				}
-			} else if (type instanceof graphql.GraphQLInterfaceType) {
+			} else if (type instanceof GraphQLInterfaceType) {
 				types.interfaces[type.name] = type;
-			} else if (type instanceof graphql.GraphQLUnionType) {
+			} else if (type instanceof GraphQLUnionType) {
 				types.unions[type.name] = type;
-			} else if (type instanceof graphql.GraphQLScalarType) {
+			} else if (type instanceof GraphQLScalarType) {
 				types.scalars[type.name] = type;
-			} else if (type instanceof graphql.GraphQLEnumType) {
+			} else if (type instanceof GraphQLEnumType) {
 				types.enums[type.name] = type;
-			} else if (type instanceof graphql.GraphQLInputObjectType) {
+			} else if (type instanceof GraphQLInputObjectType) {
 				types.inputs[type.name] = type;
 			}
 		}

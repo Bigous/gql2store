@@ -3,10 +3,10 @@ import { argv } from 'process';
 import { existsSync, readFileSync, writeFile, mkdirSync } from 'fs';
 //import graphqlHTTP from 'express-graphql';
 
-import { loadSchema } from './src/SDLLoader';
-import { SchemaGenerator } from './src/SchemaGenerator';
-import { DaoGenerator } from './src/DaoGenerator';
-import { StoreGenerator } from './src/StoreGenerator';
+import { loadSchema } from './SDLLoader';
+import { SchemaGenerator } from './SchemaGenerator';
+import { DaoGenerator } from './DaoGenerator';
+import { StoreGenerator } from './StoreGenerator';
 
 path.basename(process.cwd());
 
