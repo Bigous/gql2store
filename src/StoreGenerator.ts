@@ -42,14 +42,14 @@ const actions = {
 	${camelize('fetch ' + typePluralName)}({ commit, dispatch }, { entities, args }) {
 		if (!entities.${nameCamel}) return null;
 
-		const ids = Object.keys(entities.${nameCamel});\n${type.dependencies.map(e => {
+		const ids = Object.keys(entities.${nameCamel});
+
+		${type.dependencies.map(e => {
 			let depName = e.typeName;
 			let depNameCamel = camelize(depName);
 			let depTypePluralName = pluralize(depNameCamel);
-			return `\n\t\tif(entities.${depNameCamel}) dispatch('${camelize('fetch ' + depTypePluralName)}', { entities });`;
-		}).join('')}
-
-		// fetch ${typePluralName}
+			return `if(entities.${depNameCamel}) dispatch('${camelize('fetch ' + depTypePluralName)}', { entities });\n\t\t`;
+		}).join('')}// fetch ${typePluralName}
 		commit(types.FETCH_${typePluralName.toUpperCase()}, { entities, result: ids });
 
 		// fetch list data
