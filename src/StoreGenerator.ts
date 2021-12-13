@@ -6,7 +6,7 @@ import { camelize } from "./utils";
 import { existsSync, mkdirSync, writeFile } from 'node:fs';
 
 export class StoreGenerator extends FileGenerator {
-	folder: string = path.join('modules', 'store');
+	folder: string = path.join('store', 'modules');
 	sufix: string = '.ts';
 
 	getData(type: SDLObjectType, types: SDLProcessedSchema): string {
@@ -14,12 +14,12 @@ export class StoreGenerator extends FileGenerator {
 		let nameLower = name.toLowerCase();
 		let nameUpper = name.toUpperCase();
 		let nameCamel = camelize(name);
-	
+
 		let queryNames = type.queries.map(e => e.gqlQueryName);
 		let mutationNames = type.mutations.map(e => e.gqlMutationName);
-	
+
 		let typePluralName = pluralize(nameCamel);
-	
+
 		let data = `import { normalize } from 'normalizr';
 import _ from 'lodash';
 
@@ -43,11 +43,11 @@ const actions = {
 		if (!entities.${nameCamel}) return null;
 
 		const ids = Object.keys(entities.${nameCamel});\n${type.dependencies.map(e => {
-		let depName = e.typeName;
-		let depNameCamel = camelize(depName);
-		let depTypePluralName = pluralize(depNameCamel);
-		return `\n\t\tif(entities.${depNameCamel}) dispatch('${camelize('fetch ' + depTypePluralName)}', { entities });`;
-	}).join('')}
+			let depName = e.typeName;
+			let depNameCamel = camelize(depName);
+			let depTypePluralName = pluralize(depNameCamel);
+			return `\n\t\tif(entities.${depNameCamel}) dispatch('${camelize('fetch ' + depTypePluralName)}', { entities });`;
+		}).join('')}
 
 		// fetch ${typePluralName}
 		commit(types.FETCH_${typePluralName.toUpperCase()}, { entities, result: ids });
@@ -60,8 +60,8 @@ const actions = {
 	},
 
 	// Queries${queryNames.map(e => {
-		let funcName = camelize('Get ' + e);
-		return `\n\n\t${funcName}({ dispatch }, args) {
+			let funcName = camelize('Get ' + e);
+			return `\n\n\t${funcName}({ dispatch }, args) {
 		return dao.${funcName}(args)
 			.then(res => normalize(res, [${nameUpper}_SCHEMA]))
 			.then(({ entities }) => dispatch('${camelize('fetch ' + typePluralName)}', { entities, args }))
@@ -69,20 +69,20 @@ const actions = {
 	},`}).join('')}
 
 	// Mutations${mutationNames.filter(n => {
-			return !n.toUpperCase().startsWith('DEL');
-		}).map(e => {
-			let funcName = camelize(e);
-			return `\n\n\t${funcName}({ dispatch }, args) {
+				return !n.toUpperCase().startsWith('DEL');
+			}).map(e => {
+				let funcName = camelize(e);
+				return `\n\n\t${funcName}({ dispatch }, args) {
 		return dao.${funcName}(args)
 			.then(res => normalize(res, ${nameUpper}_SCHEMA)) // normalize
 			.then(({ entities }) => dispatch('${camelize('fetch ' + typePluralName)}', { entities })) // fetch
 			.catch(errorHandler);
 	},`
-		}).join('')}${mutationNames.filter(n => {
-			return n.toUpperCase().startsWith('DEL');
-		}).map(e => {
-			let funcName = camelize(e);
-			return `\n\n\t${funcName}({ commit }, args) {
+			}).join('')}${mutationNames.filter(n => {
+				return n.toUpperCase().startsWith('DEL');
+			}).map(e => {
+				let funcName = camelize(e);
+				return `\n\n\t${funcName}({ commit }, args) {
 		return dao.${funcName}(args)
 			.then(res => {
 				// remove from store
@@ -91,7 +91,7 @@ const actions = {
 			})
 			.catch(errorHandler);
 	},`
-		}).join('')}
+			}).join('')}
 
 };
 
@@ -135,9 +135,9 @@ export default {
 	mutations,
 };
 `;
-	return data;
+		return data;
 	}
-	
+
 	generateStoreMutationsFor(types: SDLProcessedSchema) {
 		let p = path.join(process.cwd(), 'tmp', 'store');
 		if (!existsSync(p)) {
@@ -145,21 +145,21 @@ export default {
 			mkdirSync(p, { recursive: true });
 		}
 		let orderedTypeNames = Object.keys(types.objects).sort();
-	
+
 		let data = `// base
 export const WIPE_STORE = '[base] wipe store';
 
 ${orderedTypeNames.map(e => {
-		let nameUpper = e.toUpperCase();
-		let nameCamel = camelize(e);
-		let typePluralName = pluralize(nameCamel);
+			let nameUpper = e.toUpperCase();
+			let nameCamel = camelize(e);
+			let typePluralName = pluralize(nameCamel);
 
-		return `// ${e}
+			return `// ${e}
 export const FETCH_${nameUpper} = '[${nameCamel}] fetch ${nameCamel}';
 export const FETCH_${typePluralName.toUpperCase()} = '[${typePluralName}] fetch ${typePluralName}';
 export const DELETE_${nameUpper} = '[${nameCamel}] delete ${nameCamel}';\n\n`;
-	}).join('\n')}\n`;
-	
+		}).join('\n')}\n`;
+
 		writeFile(path.join(p, 'mutations.ts'), data, 'utf8', (err) => {
 			if (err) {
 				console.log('Error writing file: ' + err);
