@@ -38,23 +38,6 @@ function camel2kebab(str) {
 	return str.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
 }
 
-function generateCrossReference(types) {
-	let tk = Object.keys(types);
-	tk.forEach(typeName1 => {
-		let type = types[typeName1];
-		type.dependantTypes = [];
-		tk.forEach(typeName2 => {
-			if(typeName1 !== typeName2) {
-				let type2 = types[typeName2];
-				let depandant = type2.dependencies.find(i => i.typeName === typeName1);
-				if(depandant) {
-					type.dependantTypes.push({ type:type2, fieldName: depandant.fieldName });
-				}
-			}
-		});
-	});
-}
-
 function processSchema(schema) {
 	console.log('Processing schema');
 	let scalars = {};
@@ -100,15 +83,15 @@ function processSchema(schema) {
 
 	let to = Object.keys(types.objects);
 
+	generateDependeciyRelations(types.objects);
+	generateCrossReference(types.objects);
+	generateFragments(types.objects);
+
 	console.log('Generating schema files for types: ' + to.join(', '));
 
 	to.forEach(element => {
 		let type = types.objects[element];
 		generateSchemaFor(type, types);
-	});
-	generateCrossReference(types.objects);
-	to.forEach(element => {
-		let type = types.objects[element];
 		generateDaoFor(type);
 		generateStoreFor(type, types);
 	});
@@ -117,9 +100,62 @@ function processSchema(schema) {
 	console.log('Done');
 }
 
+function generateDependeciyRelations(objects) {
+	let ok = Object.keys(objects);
+	ok.forEach(typeName => {
+		let type = objects[typeName];
+		let fields = type.getFields();
+		type.dependencies = Object.keys(fields).filter(element => {
+			let t = fields[element].type;
+			return (t instanceof graphql.GraphQLObjectType) || (t instanceof graphql.GraphQLList);
+		}).map(element => {
+			return {
+				fieldName: element,
+				typeName: fields[element].type instanceof graphql.GraphQLObjectType ? fields[element].type.name : fields[element].type.ofType.name
+			};
+		});
+	});
+}
+
+function generateCrossReference(objects) {
+	let ok = Object.keys(objects);
+	ok.forEach(typeName1 => {
+		let type = objects[typeName1];
+		type.dependantTypes = [];
+		ok.forEach(typeName2 => {
+			if (typeName1 !== typeName2) {
+				let type2 = objects[typeName2];
+				let depandant = type2.dependencies.find(i => i.typeName === typeName1);
+				if (depandant) {
+					type.dependantTypes.push({ type: type2, fieldName: depandant.fieldName });
+				}
+			}
+		});
+	});
+}
+
+function generateFragments(objects) {
+	let ok = Object.keys(objects);
+	ok.forEach(typeName => {
+		let type = objects[typeName];
+		let fields = Object.keys(type.getFields()).filter(fieldName => {
+			let field = type.getFields()[fieldName];
+			let typeField = undefined;
+			if (field.type instanceof graphql.GraphQLObjectType) {
+				typeField = objects[field.type];
+			} else if(field.type instanceof graphql.GraphQLList) {
+				typeField = objects[field.type.ofType];
+			} else {
+				return false;
+			}
+			return typeField && typeField.exports.indexOf(fieldName) === -1;
+		});
+
+	});
+}
+
 function generateSchemaFor(type, types) {
 	let name = type.name;
-	let nameLower = name.toLowerCase();
 	let p = path.join(process.cwd(), 'tmp', 'schema');
 	if (!existsSync(p)) {
 		console.log('Creating directory: ' + p);
@@ -147,16 +183,7 @@ function getHeaderSchemaStringFor(type) {
 		return e.startsWith('id') && e.endsWith(nameLower);
 	});
 	type.id = id;
-	let dependencies = type.getFields();
-	type.dependencies = dependencies = fields.filter(element => {
-		let type = dependencies[element].type;
-		return (type instanceof graphql.GraphQLObjectType) || (type instanceof graphql.GraphQLList);
-	}).map(element => {
-		return {
-			fieldName: element,
-			typeName: dependencies[element].type instanceof graphql.GraphQLObjectType ? dependencies[element].type.name : dependencies[element].type.ofType.name
-		};
-	});
+	let dependencies = type.dependencies;
 	let data = `
 import { schema } from 'normalizr';
 ${dependencies.map(element => {
@@ -257,13 +284,13 @@ function generateDaoFor(type) {
 	let data = `import gql from 'graphql-tag';
 
 import { privateClient } from '@/apollo';${type.dependantTypes.map(dep => {
-	if(dep.type.queries.length > 0) {
-		let importArgs = dep.type.exports.find(e => e.startsWith(`Get${pluralize(dep.type.name)}`));
-		let importName = camel2kebab(camelize(dep.type.name));
-		return `\nimport { ${importArgs} } from '@/schema/${importName}.schema';`;
-	}
-	return '';
-}).join('')}
+		if (dep.type.queries.length > 0) {
+			let importArgs = dep.type.exports.find(e => e.startsWith(`Get${pluralize(dep.type.name)}`));
+			let importName = camel2kebab(camelize(dep.type.name));
+			return `\nimport { ${importArgs} } from '@/schema/${importName}.schema';`;
+		}
+		return '';
+	}).join('')}
 import {
 	${type.exports.join(',\n\t')},
 } from '@/schema/${nameLower}.schema';
@@ -285,15 +312,15 @@ ${type.queries.map(e => {
 	},\n\n`;
 	}).join('')}
 ${type.dependantTypes.map(dep => {
-	// Se o dependente não tem querie, não precisamos gerar o método.
-	if(dep.type.queries.length === 0)
-		return '';
-	let dependentName = dep.type.name;
-	let funcName = camelize('Get ' + dependentName + ' ' + pluralize(type.name));
-	let gqlName = dep.type.queries[0].gqlQueryName;
-	let tExp = type.exports.find(e => e.startsWith(`Get${pluralize(type.name)}`));
-	let dExp = dep.type.exports.find(e => e.startsWith(`Get${pluralize(dep.type.name)}`));
-	return `\t${funcName}(variables) {
+		// Se o dependente não tem querie, não precisamos gerar o método.
+		if (dep.type.queries.length === 0)
+			return '';
+		let dependentName = dep.type.name;
+		let funcName = camelize('Get ' + dependentName + ' ' + pluralize(type.name));
+		let gqlName = dep.type.queries[0].gqlQueryName;
+		let tExp = type.exports.find(e => e.startsWith(`Get${pluralize(type.name)}`));
+		let dExp = dep.type.exports.find(e => e.startsWith(`Get${pluralize(dep.type.name)}`));
+		return `\t${funcName}(variables) {
 		const { gqlArgs, gqlParams } = parseArgsGQL([${dExp}, ${tExp}]);
 		const [${camelize(dep.type.name)}Params, ${camelize(type.name)}Params] = gqlParams;
 
@@ -308,7 +335,7 @@ ${type.dependantTypes.map(dep => {
 		\`;
 		return privateClient.query({ query: qry, variables }).then(({ data }) => data.${gqlName});
 	},\n\n`;
-}).join('')}
+	}).join('')}
 ${type.mutations.map(e => {
 		let funcName = camelize(e.gqlMutationName);
 		let gqlName = e.gqlMutationName;
@@ -349,11 +376,14 @@ function generateStoreFor(type, types) {
 
 	let data = `import { normalize } from 'normalizr';
 import _ from 'lodash';
-import bcjGraphMerge from '../../utils/bcj-graph-merge';
 
-import dao from '../../daos/${nameLower}.dao';
-import { ${nameUpper}_SCHEMA } from '../../schema/${nameLower}.schema';
-import errorHandler from '../../utils/error-handler';
+import dao from '@/daos/${nameLower}.dao';
+import { ${nameUpper}_SCHEMA } from '@/schema/${nameLower}.schema';
+
+import bcjGraphMerge from '@/utils/bcj-graph-merge';
+import errorHandler from '@/utils/error-handler';
+import enums from '@/enum/enum';
+
 import * as types from '../mutations';
 
 const initialState = {
@@ -363,21 +393,23 @@ const initialState = {
 
 const actions = {
 
-	${camelize('fetch ' + typePluralName)}({ commit${type.dependencies.length ? ', dispatch' : ''} }, { entities }) {
+	${camelize('fetch ' + typePluralName)}({ commit, dispatch }, { entities, args }) {
 		if (!entities.${nameCamel}) return null;
 
-		const ids = Object.keys(entities.${nameCamel});\n${
-			type.dependencies.map(e => {
-			let depName = e.typeName;
-			let depNameUpper = depName.toUpperCase();
-			let depNameCamel = camelize(depName);
-			let depType = types.objects[depName];
-			let depTypePluralName = pluralize(depNameCamel);
-			return `\n\t\tif(entities.${depNameCamel}) dispatch('${camelize('fetch ' + depTypePluralName)}', { entities });`;
-		}).join('')}
+		const ids = Object.keys(entities.${nameCamel});\n${type.dependencies.map(e => {
+		let depName = e.typeName;
+		let depNameUpper = depName.toUpperCase();
+		let depNameCamel = camelize(depName);
+		let depType = types.objects[depName];
+		let depTypePluralName = pluralize(depNameCamel);
+		return `\n\t\tif(entities.${depNameCamel}) dispatch('${camelize('fetch ' + depTypePluralName)}', { entities });`;
+	}).join('')}
 
 		// fetch ${typePluralName}
 		commit(types.FETCH_${typePluralName.toUpperCase()}, { entities, result: ids });
+
+		// fetch list data
+		dispatch('checkAsyncListArgs', { idEntity: enums.EntityIds.${name}, args, ids });
 
 		// return ${typePluralName}
 		return ids.map(id => entities.${nameCamel}[id]);
@@ -388,7 +420,7 @@ const actions = {
 		return `\n\n\t${funcName}({ dispatch }, args) {
 		return dao.${funcName}(args)
 			.then(res => normalize(res, [${nameUpper}_SCHEMA]))
-			.then(({ entities }) => dispatch('${camelize('fetch ' + e)}', { entities }))
+			.then(({ entities }) => dispatch('${camelize('fetch ' + typePluralName)}', { entities, args }))
 			.catch(errorHandler);
 	},`}).join('')}
 
@@ -399,7 +431,7 @@ const actions = {
 			return `\n\n\t${funcName}({ dispatch }, args) {
 		return dao.${funcName}(args)
 			.then(res => normalize(res, ${nameUpper}_SCHEMA)) // normalize
-			.then(({ entities }) => dispatch('${camelize('fetch ' + e)}', { entities })) // fetch
+			.then(({ entities }) => dispatch('${camelize('fetch ' + typePluralName)}', { entities })) // fetch
 			.catch(errorHandler);
 	},`
 		}).join('')}${mutationNames.filter(n => {
@@ -437,7 +469,7 @@ const mutations = {
 
 	[types.FETCH_${typePluralName.toUpperCase()}](state, { entities, result }) {
 		state.ids = _.union(state.ids, result);
-		bcjGraphMerge(state.${typePluralName}, entities.${nameCamel});
+		state.${typePluralName} = bcjGraphMerge(state.${typePluralName}, entities.${nameCamel});
 	},
 
 	[types.DELETE_${nameUpper}](state, { ${type.id} }) {
