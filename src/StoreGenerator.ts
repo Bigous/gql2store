@@ -20,7 +20,8 @@ export class StoreGenerator extends FileGenerator {
 
 		let typePluralName = pluralize(nameCamel);
 
-		let data = `import { normalize } from 'normalizr';
+		let data =
+`import { normalize } from 'normalizr';
 import _ from 'lodash';
 
 import dao from '@/daos/${nameLower}.dao';
@@ -43,13 +44,17 @@ const actions = {
 		if (!entities.${nameCamel}) return null;
 
 		const ids = Object.keys(entities.${nameCamel});
+${
+	type.dependencies.map(e => {
+		let depName = e.typeName;
+		let depNameCamel = camelize(depName);
+		let depTypePluralName = pluralize(depNameCamel);
 
-		${type.dependencies.map(e => {
-			let depName = e.typeName;
-			let depNameCamel = camelize(depName);
-			let depTypePluralName = pluralize(depNameCamel);
-			return `if(entities.${depNameCamel}) dispatch('${camelize('fetch ' + depTypePluralName)}', { entities });\n\t\t`;
-		}).join('')}// fetch ${typePluralName}
+		return `
+		if (entities.${depNameCamel}) dispatch('${camelize('fetch ' + depTypePluralName)}', { entities });`;
+	}).join('') + (type.dependencies.length > 0 ? '\n' : '')
+}
+		// fetch ${typePluralName}
 		commit(types.FETCH_${typePluralName.toUpperCase()}, { entities, result: ids });
 
 		// fetch list data
@@ -59,40 +64,50 @@ const actions = {
 		return ids.map(id => entities.${nameCamel}[id]);
 	},
 
-	// Queries${queryNames.map(e => {
-			let funcName = camelize('Get ' + e);
-			return `\n\n\t${funcName}({ dispatch }, args) {
+	// Queries
+${
+	queryNames.map(e => {
+		let funcName = camelize('Get ' + e);
+
+		return `
+	${funcName}({ dispatch }, args) {
 		return dao.${funcName}(args)
 			.then(res => normalize(res, [${nameUpper}_SCHEMA]))
 			.then(({ entities }) => dispatch('${camelize('fetch ' + typePluralName)}', { entities, args }))
 			.catch(errorHandler);
-	},`}).join('')}
-
-	// Mutations${mutationNames.filter(n => {
-				return !n.toUpperCase().startsWith('DEL');
-			}).map(e => {
-				let funcName = camelize(e);
-				return `\n\n\t${funcName}({ dispatch }, args) {
+	},
+`;
+	}).join('')
+}
+	// Mutations
+${
+	mutationNames.filter(n => !n.toUpperCase().startsWith('DEL')).map(e => {
+		let funcName = camelize(e);
+		return `
+	${funcName}({ dispatch }, args) {
 		return dao.${funcName}(args)
 			.then(res => normalize(res, ${nameUpper}_SCHEMA)) // normalize
 			.then(({ entities }) => dispatch('${camelize('fetch ' + typePluralName)}', { entities })) // fetch
 			.catch(errorHandler);
-	},`
-			}).join('')}${mutationNames.filter(n => {
-				return n.toUpperCase().startsWith('DEL');
-			}).map(e => {
+	},
+`;
+	}).join('')
+}${
+	mutationNames.filter(n => n.toUpperCase().startsWith('DEL')).map(e => {
 				let funcName = camelize(e);
-				return `\n\n\t${funcName}({ commit }, args) {
+				return `
+	${funcName}({ commit }, args) {
 		return dao.${funcName}(args)
-			.then(res => {
+			.then((res) => {
 				// remove from store
 				commit(types.DELETE_${nameUpper.toUpperCase()}, res);
 				return res;
 			})
 			.catch(errorHandler);
-	},`
-			}).join('')}
-
+	},
+`;
+	}).join('')
+}
 };
 
 // getters always use the state from the store.
@@ -140,25 +155,49 @@ export default {
 
 	generateStoreMutationsFor(types: SDLProcessedSchema) {
 		let p = path.join(process.cwd(), 'tmp', 'store');
+
 		if (!existsSync(p)) {
 			console.log('Creating directory: ' + p);
 			mkdirSync(p, { recursive: true });
 		}
+
 		let orderedTypeNames = Object.keys(types.objects).sort();
 
-		let data = `// base
-export const WIPE_STORE = '[base] wipe store';
+		let data =
+`// async list
+export const FETCH_ASYNC_LIST = '[asyncList] fetch async list';
+export const FLAG_ASYNC_LISTS = '[asyncList] flag async lists';
+export const RELOAD_ASYNC_LISTS = '[asyncList] reload async lists';
+export const REMOVE_FROM_ASYNC_LISTS = '[asyncList] remove from async lists';
 
-${orderedTypeNames.map(e => {
-			let nameUpper = e.toUpperCase();
-			let nameCamel = camelize(e);
-			let typePluralName = pluralize(nameCamel);
+// auth
+export const SET_TOKEN = '[auth] set token';
+export const LOGOUT = '[auth] logout';
 
-			return `// ${e}
+// wipes
+export const WIPE_REPORT_STORE = '[global] wipe report store';
+export const WIPE_STORE = '[global] wipe store';
+
+// ---------- ENTITIES-CUSTOM ------------
+
+// Admin
+export const FETCH_ME = '[me] fetch me';
+
+// ------------- ENTITIES ----------------
+${
+	orderedTypeNames.map(e => {
+		let nameUpper = e.toUpperCase();
+		let nameCamel = camelize(e);
+		let typePluralName = pluralize(nameCamel);
+
+		return `
+// ${e}
 export const FETCH_${nameUpper} = '[${nameCamel}] fetch ${nameCamel}';
 export const FETCH_${typePluralName.toUpperCase()} = '[${typePluralName}] fetch ${typePluralName}';
-export const DELETE_${nameUpper} = '[${nameCamel}] delete ${nameCamel}';\n\n`;
-		}).join('\n')}\n`;
+export const DELETE_${nameUpper} = '[${nameCamel}] delete ${nameCamel}';
+`;
+	}).join('')
+}`;
 
 		writeFile(path.join(p, 'mutations.ts'), data, 'utf8', (err) => {
 			if (err) {
