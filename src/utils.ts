@@ -7,3 +7,7 @@ export function camelize(str: string): string {
 export function camel2kebab(str: string): string {
 	return str.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
 }
+
+export function camel2snake(str: string): string {
+	return str.replace(/([a-z])([A-Z])/g, '$1_$2').toLowerCase();
+}

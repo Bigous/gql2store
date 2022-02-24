@@ -1,11 +1,11 @@
-import path from 'node:path'
+import path from 'node:path';
 import { existsSync, mkdirSync, writeFile } from 'node:fs';
 
-import { GraphQLEnumType, GraphQLField, GraphQLList, GraphQLNonNull, GraphQLObjectType, GraphQLOutputType, GraphQLScalarType } from 'graphql';
+import { GraphQLEnumType, GraphQLList, GraphQLNonNull, GraphQLObjectType, GraphQLScalarType } from 'graphql';
 
-import { FileGenerator } from "./FileGenerator";
-import { SDLObjectType, SDLProcessedSchema } from "./types/definitions";
-import { camel2kebab, camelize } from "./utils";
+import { FileGenerator } from './FileGenerator';
+import { SDLObjectType, SDLProcessedSchema } from './types/definitions';
+import { camel2kebab } from './utils';
 
 const scalarMap: { [key: string]: string } = {
 	'JSON': 'any',
@@ -23,11 +23,11 @@ const scalarMap: { [key: string]: string } = {
 };
 
 export class TypesGenerator extends FileGenerator {
-	folder: string = 'types';
-	sufix: string = '.d.ts';
+	folder = 'types';
+	sufix = '.d.ts';
 
 	getData(type: SDLObjectType, types: SDLProcessedSchema) {
-		let typeDependences: Array<string> = [];
+		const typeDependences: Array<string> = [];
 		let useEnums = false;
 
 		const typeFields = type.getFields();
@@ -58,10 +58,10 @@ export class TypesGenerator extends FileGenerator {
 			return `\t${fieldName}${nonNull ? '' : '?'}: ${fieldTypeName};`;
 		});
 
-		let data =
+		const data =
 `${
 	useEnums ?
-`import enums from '@/enum/enum';
+		`import enums from '@/enum/enum';
 import { valueof } from './shared.d';
 
 ` : ''
@@ -80,16 +80,16 @@ ${interfaceMembers.join('\n')}
 	}
 
 	generateIndexFor(types: SDLProcessedSchema) {
-		let p = path.join(process.cwd(), 'tmp', 'types');
+		const p = path.join(process.cwd(), 'tmp', 'types');
 
 		if (!existsSync(p)) {
 			console.log('Creating directory: ' + p);
 			mkdirSync(p, { recursive: true });
 		}
 
-		let orderedTypeNames = Object.keys(types.objects).sort();
+		const orderedTypeNames = Object.keys(types.objects).sort();
 
-		let data =
+		const data =
 `${
 	orderedTypeNames.map(typeName =>
 		`export * from './${camel2kebab(typeName)}.d';\n`

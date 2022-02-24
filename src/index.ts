@@ -1,6 +1,6 @@
 import path from 'path';
 import { argv } from 'process';
-import { existsSync, readFileSync, writeFile, mkdirSync } from 'fs';
+import { existsSync } from 'fs';
 //import graphqlHTTP from 'express-graphql';
 
 import { loadSchema } from './SDLLoader';
@@ -32,29 +32,32 @@ if (existsSync(argv[2])) {
 
 /**
  * Process the SDL file and generate the store, dao and schema files.
- * @param {string} sdlFileName 
+ * @param {string} sdlFileName
  */
 function generateFilesFrom(sdlFileName: string) {
 	console.log('Processing schema at: ' + sdlFileName);
 
-	const types = loadSchema(sdlFileName);
+	const processedSchema = loadSchema(sdlFileName);
 
-	const to = Object.keys(types.objects);
+	const types = Object.values(processedSchema.objects);
+	const typeNames = Object.keys(processedSchema.objects);
 
-	console.log('Generating schema files for types: ' + to.join(', '));
+	console.log('Generating schema files for types: ' + typeNames.join(', '));
 
-	let sg = new StoreGenerator();
-    let tg = new TypesGenerator();
-	let generators = [new SchemaGenerator(), new DaoGenerator(), sg, tg];
+	const storeGen = new StoreGenerator();
+	const tsTypesGen = new TypesGenerator();
+	const generators = [new SchemaGenerator(), new DaoGenerator(), storeGen, tsTypesGen];
 
-	to.forEach(element => {
-		let type = types.objects[element];
+	types.forEach(type => {
+
 		generators.forEach(generator => {
-			generator.generateFileFor(type, types);
+			generator.generateFileFor(type, processedSchema);
 		});
+
 	});
-	sg.generateStoreMutationsFor(types);
-    tg.generateIndexFor(types);
+
+	storeGen.generateStoreMutationsFor(processedSchema);
+	tsTypesGen.generateIndexFor(processedSchema);
 
 	console.log('Done');
 }

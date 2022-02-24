@@ -1,31 +1,42 @@
 import pluralize from 'pluralize';
-import path from 'node:path'
-import { FileGenerator } from "./FileGenerator";
-import { SDLObjectType, SDLProcessedSchema } from "./types/definitions";
-import { camelize } from "./utils";
+import path from 'node:path';
+import { FileGenerator } from './FileGenerator';
+import { SDLObjectType, SDLProcessedSchema } from './types/definitions';
+import { camel2kebab, camel2snake, camelize } from './utils';
 import { existsSync, mkdirSync, writeFile } from 'node:fs';
 
 export class StoreGenerator extends FileGenerator {
-	folder: string = path.join('store', 'modules');
-	sufix: string = '.ts';
+	folder = path.join('store', 'modules');
+	sufix = '.ts';
 
-	getData(type: SDLObjectType, types: SDLProcessedSchema): string {
-		let name = type.name;
-		let nameLower = name.toLowerCase();
-		let nameUpper = name.toUpperCase();
-		let nameCamel = camelize(name);
+	getData(type: SDLObjectType, types: SDLProcessedSchema) {
+		const nameCamel = camelize(type.name);
+		const nameKebab = camel2kebab(camelize(type.name));
+		const typeNameSchema = camel2snake(camelize(type.name + 'Schema')).toUpperCase();
 
-		let queryNames = type.queries.map(e => e.gqlQueryName);
-		let mutationNames = type.mutations.map(e => e.gqlMutationName);
+		const mutationNames = type.mutations.map(e => e.gqlMutationName);
 
-		let typePluralName = pluralize(nameCamel);
+		const typePluralName = pluralize(nameCamel);
 
-		let data =
+		const fetchTypePlural = camelize('fetch ' + typePluralName);
+		const wipeTypePlural = camelize('wipe ' + typePluralName);
+
+		const data =
 `import { normalize } from 'normalizr';
 import _ from 'lodash';
 
-import dao from '@/daos/${nameLower}.dao';
-import { ${nameUpper}_SCHEMA } from '@/schema/${nameLower}.schema';
+import dao from '@/daos/${nameKebab}.dao';
+import { ${typeNameSchema} } from '@/schema/${nameKebab}.schema';
+${
+	type.dependantTypes.map(dep => {
+		if (dep.type.queries.length === 0) return '';
+
+		const depNameSchema = camel2snake(camelize(dep.type.name + 'Schema')).toUpperCase();
+		const depNameKebab = camel2kebab(camelize(dep.type.name));
+
+		return `\nimport { ${depNameSchema} } from '@/schema/${depNameKebab}.schema';`;
+	}).join('')
+}
 
 import bcjGraphMerge from '@/utils/bcj-graph-merge';
 import errorHandler from '@/utils/error-handler';
@@ -40,40 +51,70 @@ const initialState = {
 
 const actions = {
 
-	${camelize('fetch ' + typePluralName)}({ commit, dispatch }, { entities, args }) {
-		if (!entities.${nameCamel}) return null;
+	${fetchTypePlural}({ commit, dispatch }, { entities, args }) {
+		if (entities.${nameCamel}) delete entities.${nameCamel}.undefined;
 
-		const ids = Object.keys(entities.${nameCamel});
+		const ids = Object.keys(entities.${nameCamel} || {});
+
+		if (args && args.wipe) {
+			dispatch('${wipeTypePlural}', { ids, soft: true });
+		}
 ${
-	type.dependencies.map(e => {
-		let depName = e.typeName;
-		let depNameCamel = camelize(depName);
-		let depTypePluralName = pluralize(depNameCamel);
+	type.dependencies
+		// in recursive entities, avoid definition loop
+		.filter(dep => dep.typeName !== type.name)
+		.map(dep => {
+			const depNameCamel = camelize(dep.typeName);
+			const fetchDepPlural = camelize('fetch ' + pluralize(dep.typeName));
 
-		return `
-		if (entities.${depNameCamel}) dispatch('${camelize('fetch ' + depTypePluralName)}', { entities });`;
-	}).join('') + (type.dependencies.length > 0 ? '\n' : '')
+			return `
+		if (entities.${depNameCamel}) dispatch('${fetchDepPlural}', { entities });`;
+		}).join('') + (type.dependencies.length > 0 ? '\n' : '')
 }
 		// fetch ${typePluralName}
 		commit(types.FETCH_${typePluralName.toUpperCase()}, { entities, result: ids });
 
 		// fetch list data
-		dispatch('checkAsyncListArgs', { idEntity: enums.EntityIds.${name}, args, ids });
+		dispatch('checkAsyncListArgs', { idEntity: enums.EntityIds.${type.name}, args, ids });
 
 		// return ${typePluralName}
 		return ids.map(id => entities.${nameCamel}[id]);
 	},
 
+	${wipeTypePlural}: ({ commit, dispatch }, { soft, ids }) => {
+		commit(types.DELETE_${typePluralName.toUpperCase()}, ids);
+
+		if (!soft) {
+			dispatch('removeFromAsyncLists', { idEntity: enums.EntityIds.${type.name}, ids });
+		}
+	},
+
 	// Queries
 ${
-	queryNames.map(e => {
-		let funcName = camelize('Get ' + e);
+	type.queries.map(query => {
+		const funcName = camelize('Get ' + query.gqlQueryName);
 
 		return `
 	${funcName}({ dispatch }, args) {
 		return dao.${funcName}(args)
-			.then(res => normalize(res, [${nameUpper}_SCHEMA]))
-			.then(({ entities }) => dispatch('${camelize('fetch ' + typePluralName)}', { entities, args }))
+			.then(res => normalize(res, [${typeNameSchema}]))
+			.then(({ entities }) => dispatch('${fetchTypePlural}', { entities, args }))
+			.catch(errorHandler);
+	},
+`;
+	}).join('')
+}${
+	type.dependantTypes.map(dep => {
+		// Se o dependente não tem query, não precisamos gerar o método.
+		if (dep.type.queries.length === 0) return '';
+
+		const getDepPlural = camelize('Get ' + dep.type.name + ' ' + pluralize(type.name));
+
+		return `
+	${getDepPlural}({ dispatch }, args) {
+		return dao.${getDepPlural}(args)
+			.then(res => normalize(res, [${dep.type.name.toUpperCase()}_SCHEMA]))
+			.then(({ entities }) => dispatch('${fetchTypePlural}', { entities, args }))
 			.catch(errorHandler);
 	},
 `;
@@ -82,25 +123,25 @@ ${
 	// Mutations
 ${
 	mutationNames.filter(n => !n.toUpperCase().startsWith('DEL')).map(e => {
-		let funcName = camelize(e);
+		const funcName = camelize(e);
 		return `
 	${funcName}({ dispatch }, args) {
 		return dao.${funcName}(args)
-			.then(res => normalize(res, ${nameUpper}_SCHEMA)) // normalize
-			.then(({ entities }) => dispatch('${camelize('fetch ' + typePluralName)}', { entities })) // fetch
+			.then(res => normalize(res, ${typeNameSchema})) // normalize
+			.then(({ entities }) => dispatch('${fetchTypePlural}', { entities })) // fetch
 			.catch(errorHandler);
 	},
 `;
 	}).join('')
 }${
 	mutationNames.filter(n => n.toUpperCase().startsWith('DEL')).map(e => {
-				let funcName = camelize(e);
-				return `
-	${funcName}({ commit }, args) {
+		const funcName = camelize(e);
+		return `
+	${funcName}({ dispatch }, args) {
 		return dao.${funcName}(args)
 			.then((res) => {
 				// remove from store
-				commit(types.DELETE_${nameUpper.toUpperCase()}, res);
+				dispatch('${camelize('wipe ' + typePluralName)}', { ids: [res.${camelize('id ' + type.name)}] });
 				return res;
 			})
 			.catch(errorHandler);
@@ -118,7 +159,7 @@ const getters = {
 
 	${typePluralName}: (state, rootGetters) => rootGetters.${camelize('get ' + typePluralName)}(state.ids),
 
-	${camelize('get ' + name)}ById: (state, rootGetters) =>
+	${camelize('get ' + type.name)}ById: (state, rootGetters) =>
 		${type.id} =>
 			rootGetters.${typePluralName}.find(v => v.${type.id} === ${type.id}),
 
@@ -131,9 +172,12 @@ const mutations = {
 		state.${typePluralName} = bcjGraphMerge(state.${typePluralName}, entities.${nameCamel});
 	},
 
-	[types.DELETE_${nameUpper}](state, { ${type.id} }) {
-		state.ids = state.ids.filter(id => id !== ${type.id});
-		delete state.${typePluralName}[${type.id}];
+	[types.DELETE_${typePluralName.toUpperCase()}](state, ids) {
+		state.ids = state.ids.filter(id => ids.indexOf(id) < 0);
+
+		ids.forEach((id) => {
+			delete state.${typePluralName}[id];
+		});
 	},
 
 	[types.WIPE_STORE](state) {
@@ -154,16 +198,16 @@ export default {
 	}
 
 	generateStoreMutationsFor(types: SDLProcessedSchema) {
-		let p = path.join(process.cwd(), 'tmp', 'store');
+		const p = path.join(process.cwd(), 'tmp', 'store');
 
 		if (!existsSync(p)) {
 			console.log('Creating directory: ' + p);
 			mkdirSync(p, { recursive: true });
 		}
 
-		let orderedTypeNames = Object.keys(types.objects).sort();
+		const orderedTypeNames = Object.keys(types.objects).sort();
 
-		let data =
+		const data =
 `// async list
 export const FETCH_ASYNC_LIST = '[asyncList] fetch async list';
 export const FLAG_ASYNC_LISTS = '[asyncList] flag async lists';
@@ -185,16 +229,14 @@ export const FETCH_ME = '[me] fetch me';
 
 // ------------- ENTITIES ----------------
 ${
-	orderedTypeNames.map(e => {
-		let nameUpper = e.toUpperCase();
-		let nameCamel = camelize(e);
-		let typePluralName = pluralize(nameCamel);
+	orderedTypeNames.map(typeName => {
+		const nameCamel = camelize(typeName);
+		const typePluralName = pluralize(nameCamel);
 
 		return `
-// ${e}
-export const FETCH_${nameUpper} = '[${nameCamel}] fetch ${nameCamel}';
-export const FETCH_${typePluralName.toUpperCase()} = '[${typePluralName}] fetch ${typePluralName}';
-export const DELETE_${nameUpper} = '[${nameCamel}] delete ${nameCamel}';
+// ${typeName}
+export const FETCH_${typePluralName.toUpperCase()} = '[${nameCamel}] fetch ${typePluralName}';
+export const DELETE_${typePluralName.toUpperCase()} = '[${nameCamel}] delete ${typePluralName}';
 `;
 	}).join('')
 }`;

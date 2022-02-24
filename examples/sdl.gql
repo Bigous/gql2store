@@ -4,28 +4,43 @@ schema {
 }
 
 """
-A valid email address
+Topic
 """
-scalar EmailAddress
-
-"""
-String is a nullable string
-"""
-scalar NullString
-
-"""
-Conclusion
-"""
-type Conclusion {
+type Topic {
   """
 
   """
-  ConclusionAnswer: [Answer]
+  TopicChildren(idTopic: UUID, obClause: ClauseObjectInput): [Topic]
 
   """
 
   """
-  ConclusionItems(idItem: UUID, obClause: ClauseObjectInput): [Item]
+  TopicOptions(idOption: UUID, obClause: ClauseObjectInput): [Option]
+
+  """
+
+  """
+  TopicParent(obClause: ClauseObjectInput, idTopic: UUID): [Topic]
+
+  """
+
+  """
+  TopicPhrases(idPhrase: UUID, obClause: ClauseObjectInput): [Phrase]
+
+  """
+
+  """
+  TopicQuestions(idQuestion: UUID, obClause: ClauseObjectInput): [Question]
+
+  """
+
+  """
+  dsTitle: String!
+
+  """
+
+  """
+  dsTopic: NullString
 
   """
 
@@ -40,17 +55,257 @@ type Conclusion {
   """
 
   """
-  idConclusion: UUID!
+  hasChild: Boolean!
 
   """
 
   """
-  idOffice: UUID!
+  idParent: NullUUID
 
   """
 
   """
-  idProject: UUID!
+  idSection: UUID!
+
+  """
+
+  """
+  idTopic: UUID!
+
+  """
+
+  """
+  obMask: JSON!
+
+  """
+
+  """
+  obValidation: JSON!
+
+  """
+
+  """
+  tpField: FieldTypeEnum!
+}
+
+"""
+
+"""
+input LabelsAxisInput {
+  """
+
+  """
+  style: StyleAxisInput
+
+  """
+
+  """
+  format: String
+}
+
+"""
+
+"""
+input DraftInput {
+  """
+
+  """
+  idOption: UUID!
+}
+
+"""
+
+"""
+input ItemInput {
+  """
+
+  """
+  idItem: UUID
+
+  """
+
+  """
+  idPhrase: NullUUID = "{00000000-0000-0000-0000-000000000000 false}"
+
+  """
+
+  """
+  dsPhrase: String
+}
+
+"""
+StyleConfig
+"""
+type StyleConfig {
+  """
+
+  """
+  fontWeight: String
+
+  """
+
+  """
+  textOutline: String
+}
+
+"""
+YAxisConfig
+"""
+type YAxisConfig {
+  """
+
+  """
+  endOnTick: Boolean
+
+  """
+
+  """
+  gridLineWidth: Float
+
+  """
+
+  """
+  id: String
+
+  """
+
+  """
+  labels: LabelsAxisConfig
+
+  """
+
+  """
+  max: Float
+
+  """
+
+  """
+  min: Float
+
+  """
+
+  """
+  minorGridLineWidth: Float
+
+  """
+
+  """
+  opposite: Boolean
+
+  """
+
+  """
+  title: TitleAxisConfig
+}
+
+"""
+
+"""
+enum ProjectStatusEnum {
+  """
+
+  """
+  active
+
+  """
+
+  """
+  archived
+}
+
+"""
+WidgetTableConfig
+"""
+type WidgetTableConfig {
+  """
+
+  """
+  allowPaginator: Boolean
+
+  """
+
+  """
+  bodyColor: String
+
+  """
+
+  """
+  bodyFontColor: String
+
+  """
+
+  """
+  bodyFontFamily: String
+
+  """
+
+  """
+  bodyFontSize: String
+
+  """
+
+  """
+  entriesLabel: String
+
+  """
+
+  """
+  headerColor: String
+
+  """
+
+  """
+  headerFontColor: String
+
+  """
+
+  """
+  headerFontFamily: String
+
+  """
+
+  """
+  headerFontSize: String
+
+  """
+
+  """
+  paginatorColor: String
+
+  """
+
+  """
+  paginatorFontColor: String
+
+  """
+
+  """
+  paginatorPages: Int
+}
+
+"""
+Snippet
+"""
+type Snippet {
+  """
+
+  """
+  SnippetDrafts(idDraft: UUID, obClause: ClauseObjectInput): [Draft]
+
+  """
+
+  """
+  SnippetTopic(obClause: ClauseObjectInput, idTopic: UUID): Topic
+
+  """
+
+  """
+  dtCreated: DateTime!
+
+  """
+
+  """
+  dtUpdated: DateTime!
 
   """
 
@@ -60,7 +315,7 @@ type Conclusion {
   """
 
   """
-  idReport: UUID!
+  idSnippet: UUID!
 
   """
 
@@ -71,79 +326,51 @@ type Conclusion {
 """
 
 """
-input ClauseObjectInput {
+input MarkerInput {
   """
 
   """
-  select: [SelectObjectInput]
-
-  """
-
-  """
-  conditions: [ConditionObjectInput]
+  enabled: Boolean
 
   """
 
   """
-  tags: TagsObjectInput
+  fillColor: String
 
   """
 
   """
-  order: [OrderByObjectInput]
-
-  """
-
-  """
-  group: GroupByObjectInput
-
-  """
-
-  """
-  pagination: PaginationObjectInput
+  symbol: String
 }
 
 """
 
 """
-enum SortTypeEnum {
+input OrderByObjectInput {
   """
 
   """
-  asc
+  column: String!
 
   """
 
   """
-  desc
+  sort: SortTypeEnum
 }
 
 """
-Report
+Admin
 """
-type Report {
+type Admin {
   """
 
   """
-  ReportAnswers(idAnswer: UUID, obClause: ClauseObjectInput): [Answer]
-
-  """
-
-  """
-  ReportConclusions(
-    idConclusion: UUID
-    obClause: ClauseObjectInput
-  ): [Conclusion]
+  dsEmail: EmailAddress!
 
   """
 
   """
-  cdReport: String!
-
-  """
-
-  """
-  dsReport: NullString
+  dsToken: String!
 
   """
 
@@ -153,17 +380,62 @@ type Report {
   """
 
   """
-  dtExpiration: DateTime!
-
-  """
-
-  """
   dtUpdated: DateTime!
 
   """
 
   """
-  idOffice: UUID!
+  idAdmin: UUID!
+
+  """
+
+  """
+  nmAdmin: String!
+
+  """
+
+  """
+  obAdmin: JSON
+
+  """
+
+  """
+  stAdmin: RecordStatusEnum!
+}
+
+"""
+String is a nullable string
+"""
+scalar NullString
+
+"""
+Quiz
+"""
+type Quiz {
+  """
+
+  """
+  QuizReports(idReport: UUID, obClause: ClauseObjectInput): [Report]
+
+  """
+
+  """
+  QuizSnippets(idSnippet: UUID, obClause: ClauseObjectInput): [Snippet]
+
+  """
+
+  """
+  dsQuiz: NullString
+
+  """
+
+  """
+  dtCreated: DateTime!
+
+  """
+
+  """
+  dtUpdated: DateTime!
 
   """
 
@@ -178,22 +450,1030 @@ type Report {
   """
 
   """
+  nmQuiz: String!
+
+  """
+
+  """
+  obQuiz: JSON
+
+  """
+
+  """
+  stQuiz: RecordStatusEnum!
+}
+
+"""
+Attribute
+"""
+type Attribute {
+  """
+
+  """
+  AttributeOptions(obClause: ClauseObjectInput, idOption: UUID): [Option]
+
+  """
+
+  """
+  dsAttribute: String!
+
+  """
+
+  """
+  dtCreated: DateTime!
+
+  """
+
+  """
+  dtUpdated: DateTime!
+
+  """
+
+  """
+  idAttribute: UUID!
+
+  """
+
+  """
+  idCategory: UUID!
+
+  """
+
+  """
+  stAttribute: RecordStatusEnum!
+}
+
+"""
+LegendConfig
+"""
+type LegendConfig {
+  """
+
+  """
+  align: String
+
+  """
+
+  """
+  enabled: Boolean
+
+  """
+
+  """
+  itemStyle: ItemStyleConfig
+
+  """
+
+  """
+  layout: String
+
+  """
+
+  """
+  verticalAlign: String
+}
+
+"""
+A valid email address
+"""
+scalar EmailAddress
+
+"""
+
+"""
+enum RecordStatusEnum {
+  """
+
+  """
+  active
+
+  """
+
+  """
+  inactive
+}
+
+"""
+OrderByConfig
+"""
+type OrderByConfig {
+  """
+
+  """
+  asc: Boolean
+
+  """
+
+  """
+  field: String
+}
+
+"""
+Entity
+"""
+type Entity {
+  """
+
+  """
+  dtCreated: DateTime!
+
+  """
+
+  """
+  dtUpdated: DateTime!
+
+  """
+
+  """
+  idEntity: UUID!
+
+  """
+
+  """
+  nmEntity: String!
+}
+
+"""
+A valid universally unique identifier
+"""
+scalar UUID
+
+"""
+Office
+"""
+type Office {
+  """
+
+  """
+  OfficeReports(idReport: UUID, obClause: ClauseObjectInput): [Report]
+
+  """
+
+  """
+  dsEmail: EmailAddress!
+
+  """
+
+  """
+  dsOffice: NullString
+
+  """
+
+  """
+  dtCreated: DateTime!
+
+  """
+
+  """
+  dtUpdated: DateTime!
+
+  """
+
+  """
+  flKeyAccount: Boolean!
+
+  """
+
+  """
+  idClient: UUID!
+
+  """
+
+  """
+  idOffice: UUID!
+
+  """
+
+  """
+  nmContact: String!
+
+  """
+
+  """
+  nmOffice: String!
+
+  """
+
+  """
+  obOffice: JSON
+
+  """
+
+  """
+  stOffice: RecordStatusEnum!
+}
+
+"""
+
+"""
+enum ScopeTypeEnum {
+  """
+
+  """
+  template
+
+  """
+
+  """
+  public
+
+  """
+
+  """
+  report
+}
+
+"""
+Private GraphQL Mutations
+"""
+type PrivateMutation {
+  """
+
+  """
+  AddAdmin(idRole: UUID!, nmAdmin: String!, obAdmin: AdminObjectInput): Admin
+
+  """
+
+  """
+  AddAnswer(idOption: UUID!, idReport: UUID!, idTopic: UUID!): Answer
+
+  """
+
+  """
+  AddAttribute(idCategory: UUID!, dsAttribute: String!): Attribute
+
+  """
+
+  """
+  AddCategory(dsCategory: String!): Category
+
+  """
+
+  """
+  AddClient(
+    obOffices: [OfficeInput]
+    nmClient: String!
+    dsClient: NullString
+  ): Client
+
+  """
+
+  """
+  AddCompetitor(
+    nmCompetitor: String!
+    dsCompetitor: NullString
+    flAllowRating: Boolean!
+    idReport: UUID!
+  ): Competitor
+
+  """
+
+  """
+  AddConclusion(
+    idReport: UUID!
+    idTopic: UUID!
+    obAnswers: [ConclusionAnswerInput]
+    obItems: [ItemInput]
+  ): Conclusion
+
+  """
+
+  """
+  AddEmbed(
+    idSlide: UUID!
+    idWidget: UUID!
+    obConfig: WidgetConfigInput!
+    flLock: Boolean!
+    nbIndex: Int!
+    idReport: UUID!
+  ): Embed
+
+  """
+
+  """
+  AddFile(
+    flCompress: Boolean = true
+    idFile: UUID!
+    idEntity: UUID!
+    idRecord: UUID!
+  ): File
+
+  """
+
+  """
+  AddGoal(nmGoal: String!, dsGoal: NullString): Goal
+
+  """
+
+  """
+  AddOffice(
+    idClient: UUID!
+    nmOffice: String!
+    nmContact: String!
+    dsEmail: EmailAddress!
+    dsOffice: NullString
+    flKeyAccount: Boolean!
+  ): Office
+
+  """
+
+  """
+  AddOption(
+    stOption: String!
+    idTopic: UUID!
+    idAttribute: UUID!
+    dsOption: String!
+  ): Option
+
+  """
+
+  """
+  AddPhrase(idTopic: UUID!, dsPhrase: String!): Phrase
+
+  """
+
+  """
+  AddProject(
+    obGoals: [UUID]
+    idClient: UUID!
+    idSegment: UUID!
+    nmProject: String!
+    dsProject: NullString
+  ): Project
+
+  """
+
+  """
+  AddProperty(
+    idAttribute: UUID!
+    flAllowRating: Boolean!
+    idReport: UUID!
+  ): Property
+
+  """
+
+  """
+  AddQuestion(idTopic: UUID!, dsQuestion: String!): Question
+
+  """
+
+  """
+  AddQuiz(
+    idProject: UUID!
+    nmQuiz: String!
+    dsQuiz: NullString
+    obSnippets: [SnippetInput]
+  ): Quiz
+
+  """
+
+  """
+  AddRating(
+    idCompetitor: NullUUID
+    nbRating: Int!
+    idOffice: UUID!
+    idReport: UUID!
+    idAttribute: UUID!
+  ): [Rating]
+
+  """
+
+  """
+  AddReport(
+    idQuiz: UUID!
+    obOffices: [UUID]!
+    dtExpiration: DateTime!
+  ): [Report]
+
+  """
+
+  """
+  AddSection(
+    dsSection: NullString
+    idParent: NullUUID
+    nmSection: String!
+  ): Section
+
+  """
+
+  """
+  AddSegment(nmSegment: String!, dsSegment: NullString): Segment
+
+  """
+
+  """
+  AddSlide(idReport: UUID!, nbSlide: Int!, obConfig: SlideConfigInput!): Slide
+
+  """
+
+  """
+  AddTag(nmTag: String!, cdHexColor: String = "FFFFFF"): Tag
+
+  """
+
+  """
+  AddTopic(
+    idParent: NullUUID
+    dsTitle: String!
+    dsTopic: NullString
+    tpField: FieldTypeEnum!
+    obOptions: [OptionInput]
+    obSegments: [UUID]
+    idSection: UUID!
+  ): Topic
+
+  """
+
+  """
+  ChangePassword(dsOld: String!, dsNew: String!): Admin
+
+  """
+
+  """
+  CopyEmbed(idSlide: UUID!, nbIndex: Int!, idsEmbed: [UUID]!): [Embed]
+
+  """
+
+  """
+  CopyFile(idFile: UUID!, idEntity: UUID!, idRecord: UUID!): File
+
+  """
+
+  """
+  CopySlide(nbSlide: Int!, idSlide: UUID!): Slide
+
+  """
+
+  """
+  DelAdmin(idAdmin: UUID!): Admin
+
+  """
+
+  """
+  DelAnswer(idAnswer: UUID!): Answer
+
+  """
+
+  """
+  DelAttribute(idAttribute: UUID!): Attribute
+
+  """
+
+  """
+  DelCategory(idCategory: UUID!): Category
+
+  """
+
+  """
+  DelClient(idClient: UUID!): Client
+
+  """
+
+  """
+  DelCompetitor(idCompetitor: UUID!): Competitor
+
+  """
+
+  """
+  DelConclusion(idConclusion: UUID!): Conclusion
+
+  """
+
+  """
+  DelEmbed(idsEmbed: [UUID]!): [Embed]
+
+  """
+
+  """
+  DelFile(idFile: UUID!): File
+
+  """
+
+  """
+  DelGoal(idGoal: UUID!): Goal
+
+  """
+
+  """
+  DelI18n(idI18n: UUID!): I18n
+
+  """
+
+  """
+  DelOffice(idOffice: UUID!): Office
+
+  """
+
+  """
+  DelOption(idOption: UUID!): Option
+
+  """
+
+  """
+  DelPhrase(idPhrase: UUID!): Phrase
+
+  """
+
+  """
+  DelProject(idProject: UUID!): Project
+
+  """
+
+  """
+  DelProperty(idProperty: UUID!): Property
+
+  """
+
+  """
+  DelQuestion(idQuestion: UUID!): Question
+
+  """
+
+  """
+  DelQuiz(idQuiz: UUID!): Quiz
+
+  """
+
+  """
+  DelRating(idRating: UUID!): Rating
+
+  """
+
+  """
+  DelReport(idReport: UUID!): Report
+
+  """
+
+  """
+  DelSection(idSection: UUID!): Section
+
+  """
+
+  """
+  DelSegment(idSegment: UUID!): Segment
+
+  """
+
+  """
+  DelSlide(idSlide: UUID!): Slide
+
+  """
+
+  """
+  DelTag(idTag: UUID!): Tag
+
+  """
+
+  """
+  DelTopic(idTopic: UUID!): Topic
+
+  """
+
+  """
+  Me: Admin
+
+  """
+
+  """
+  MoveFile(idEntity: UUID!, idRecord: UUID!, idFile: UUID!): File
+
+  """
+
+  """
+  RenameFile(idFile: UUID!, nmFile: String!): File
+
+  """
+
+  """
+  ReorderEmbed(obEmbeds: [EmbedReorderInput]!): [Embed]
+
+  """
+
+  """
+  ReorderSlide(obSlides: [SlideReorderInput]!): [Slide]
+
+  """
+
+  """
+  ReplaceFile(
+    idOld: UUID!
+    idNew: UUID!
+    nmFile: String!
+    flCompress: Boolean = true
+  ): File
+
+  """
+
+  """
+  RestoreEmbed(idsEmbed: [UUID]!): [Embed]
+
+  """
+
+  """
+  RestoreSlide(idSlide: UUID!): Slide
+
+  """
+
+  """
+  SetAdmin(obAdmin: AdminObjectInput, nmAdmin: String!): Admin
+
+  """
+
+  """
+  SetAdminStatus(idAdmin: String!, stAdmin: RecordStatusEnum!): Admin
+
+  """
+
+  """
+  SetAnswer(idAnswer: UUID!, idOption: UUID!): Answer
+
+  """
+
+  """
+  SetAttribute(
+    idAttribute: UUID!
+    dsAttribute: String!
+    stAttribute: RecordStatusEnum!
+  ): Attribute
+
+  """
+
+  """
+  SetCategory(
+    stCategory: RecordStatusEnum!
+    idCategory: UUID!
+    dsCategory: String!
+  ): Category
+
+  """
+
+  """
+  SetClient(
+    nmClient: String!
+    dsClient: NullString = "{ false}"
+    stClient: RecordStatusEnum!
+    idClient: UUID!
+  ): Client
+
+  """
+
+  """
+  SetCompetitor(
+    flAllowRating: Boolean!
+    idCompetitor: UUID!
+    nmCompetitor: String!
+    dsCompetitor: NullString = "{ false}"
+  ): Competitor
+
+  """
+
+  """
+  SetConclusion(
+    idConclusion: UUID!
+    dsConclusion: NullString
+    obAnswers: [ConclusionAnswerInput]
+    obItems: [ItemInput]
+  ): Conclusion
+
+  """
+
+  """
+  SetEmbed(
+    idEmbed: UUID!
+    obConfig: WidgetConfigInput!
+    flLock: Boolean!
+    nbIndex: Int!
+  ): Embed
+
+  """
+
+  """
+  SetEmbeds(obEmbeds: [EmbedBulkInput]!): [Embed]
+
+  """
+
+  """
+  SetGoal(idGoal: UUID!, nmGoal: String!, dsGoal: NullString = "{ false}"): Goal
+
+  """
+
+  """
+  SetI18n(
+    dsMsgKey: String!
+    dsEnUS: String!
+    dsPtBR: String!
+    dsEsES: String!
+  ): I18n
+
+  """
+
+  """
+  SetOffice(
+    nmContact: String!
+    dsEmail: EmailAddress!
+    dsOffice: NullString = "{ false}"
+    stOffice: RecordStatusEnum!
+    flKeyAccount: Boolean!
+    idOffice: UUID!
+    nmOffice: String!
+  ): Office
+
+  """
+
+  """
+  SetOption(idOption: UUID!, dsOption: String!, stOption: String!): Option
+
+  """
+
+  """
+  SetPhrase(
+    dsPhrase: String!
+    stPhrase: RecordStatusEnum!
+    idPhrase: UUID!
+  ): Phrase
+
+  """
+
+  """
+  SetProject(
+    obGoals: [UUID]
+    idProject: UUID!
+    nmProject: String!
+    dsProject: NullString = "{ false}"
+    stProject: ProjectStatusEnum!
+  ): Project
+
+  """
+
+  """
+  SetProperty(idProperty: UUID!, flAllowRating: Boolean!): Property
+
+  """
+
+  """
+  SetQuestion(
+    idQuestion: UUID!
+    dsQuestion: String!
+    stQuestion: RecordStatusEnum!
+  ): Question
+
+  """
+
+  """
+  SetQuiz(
+    idQuiz: UUID!
+    nmQuiz: String!
+    dsQuiz: NullString = "{ false}"
+    stQuiz: RecordStatusEnum!
+    obSnippets: [SnippetInput]
+  ): Quiz
+
+  """
+
+  """
+  SetRating(nbRating: Int!, idRating: UUID!): Rating
+
+  """
+
+  """
+  SetReport(
+    tpScope: ScopeTypeEnum!
+    stReport: RecordStatusEnum!
+    dtExpiration: DateTime!
+    obAnswers: [AnswerOptionInput]
+    idReport: UUID!
+    nmReport: String!
+    dsReport: NullString = "{ false}"
+    tpReport: ReportTypeEnum!
+  ): Report
+
+  """
+
+  """
+  SetSection(
+    idSection: UUID!
+    idParent: NullUUID = "{00000000-0000-0000-0000-000000000000 false}"
+    nmSection: String!
+    dsSection: NullString = "{ false}"
+    stSection: RecordStatusEnum!
+  ): Section
+
+  """
+
+  """
+  SetSegment(
+    idSegment: UUID!
+    nmSegment: String!
+    dsSegment: NullString = "{ false}"
+  ): Segment
+
+  """
+
+  """
+  SetSlide(idSlide: UUID!, nbSlide: Int!, obConfig: SlideConfigInput!): Slide
+
+  """
+
+  """
+  SetTag(idTag: UUID!, nmTag: String!, cdHexColor: String!): Tag
+
+  """
+
+  """
+  SetTopic(
+    idParent: NullUUID
+    dsTitle: String!
+    dsTopic: NullString = "{ false}"
+    tpField: FieldTypeEnum!
+    obOptions: [OptionInput]
+    obSegments: [UUID]
+    idTopic: UUID!
+  ): Topic
+
+  """
+
+  """
+  SignOut: Boolean
+
+  """
+
+  """
+  TagRecord(idEntity: UUID!, idRecord: UUID!, obTags: [String]): [Tagged]
+}
+
+"""
+
+"""
+input DataLabelsInput {
+  """
+
+  """
+  enabled: Boolean
+
+  """
+
+  """
+  color: String
+
+  """
+
+  """
+  style: StyleInput
+}
+
+"""
+LabelsAxisConfig
+"""
+type LabelsAxisConfig {
+  """
+
+  """
+  format: String
+
+  """
+
+  """
+  style: StyleAxisConfig
+}
+
+"""
+
+"""
+enum ArrayOperatorTypeEnum {
+  """
+  have elements in common ([1,4,3] && [2,1])
+  """
+  overlap
+
+  """
+  contains ([1,4,3] @> [3,1])
+  """
+  contains
+
+  """
+  is contained by ([2,7] <@ [1,7,4,2,6])
+  """
+  contained
+}
+
+"""
+Slide
+"""
+type Slide {
+  """
+
+  """
+  SlideEmbeds(idEmbed: [UUID], obClause: ClauseObjectInput): [Embed]
+
+  """
+
+  """
+  dtCreated: DateTime!
+
+  """
+
+  """
+  dtUpdated: DateTime!
+
+  """
+
+  """
   idReport: UUID!
 
   """
 
   """
-  nmReport: String!
+  idSlide: UUID!
 
   """
 
   """
-  obReport: JSON
+  nbSlide: Int!
 
   """
 
   """
-  stReport: ReportStatusEnum!
+  obConfig: SlideConfig!
+}
+
+"""
+
+"""
+input StyleAxisInput {
+  """
+
+  """
+  color: String
+}
+
+"""
+
+"""
+input LegendInput {
+  """
+
+  """
+  align: String
+
+  """
+
+  """
+  verticalAlign: String
+
+  """
+
+  """
+  enabled: Boolean
+
+  """
+
+  """
+  layout: String
+
+  """
+
+  """
+  itemStyle: ItemStyleInput
+}
+
+"""
+
+"""
+input OfficeInput {
+  """
+
+  """
+  nmOffice: String!
+
+  """
+
+  """
+  nmContact: String!
+
+  """
+
+  """
+  dsEmail: EmailAddress!
+
+  """
+
+  """
+  dsOffice: NullString
+}
+
+"""
+
+"""
+input TagsObjectInput {
+  """
+
+  """
+  values: [String]!
+
+  """
+
+  """
+  operator: ArrayOperatorTypeEnum!
 }
 
 """
@@ -262,713 +1542,128 @@ type Project {
 }
 
 """
-Quiz
-"""
-type Quiz {
-  """
-
-  """
-  QuizReports(idReport: UUID, obClause: ClauseObjectInput): [Report]
-
-  """
-
-  """
-  QuizSnippets(idSnippet: UUID, obClause: ClauseObjectInput): [Snippet]
-
-  """
-
-  """
-  dsQuiz: NullString
-
-  """
-
-  """
-  dtCreated: DateTime!
-
-  """
-
-  """
-  dtUpdated: DateTime!
-
-  """
-
-  """
-  idProject: UUID!
-
-  """
-
-  """
-  idQuiz: UUID!
-
-  """
-
-  """
-  nmQuiz: String!
-
-  """
-
-  """
-  obQuiz: JSON
-
-  """
-
-  """
-  stQuiz: RecordStatusEnum!
-}
 
 """
-Segment
-"""
-type Segment {
+input FontInput {
   """
 
   """
-  SegmentTopics(idTopic: UUID, obClause: ClauseObjectInput): [Topic]
-
-  """
-
-  """
-  dsSegment: NullString
+  fontSize: String
 
   """
 
   """
-  dtCreated: DateTime!
+  fontFamily: String
 
   """
 
   """
-  dtUpdated: DateTime!
+  fontStyle: String
 
   """
 
   """
-  idSegment: UUID!
+  textAlign: String
 
   """
 
   """
-  nmSegment: String!
+  textDecoration: String
 
   """
 
   """
-  obSegment: JSON
+  color: String
 
   """
 
   """
-  stSegment: RecordStatusEnum!
+  text: String
+
+  """
+
+  """
+  verticalAlign: String
+
+  """
+
+  """
+  fontWeight: String
 }
 
 """
 
 """
-input SelectObjectInput {
+input SerieInput {
   """
 
   """
-  column: String!
-
-  """
-
-  """
-  function: AggregateTypeEnum
+  type: String
 
   """
 
   """
-  alias: String
+  lineWidth: Float
+
+  """
+
+  """
+  fillOpacity: Float
+
+  """
+
+  """
+  zIndex: Int
+
+  """
+
+  """
+  yAxis: Int
+
+  """
+
+  """
+  marker: MarkerInput
+
+  """
+
+  """
+  dataLabels: DataLabelsInput
+
+  """
+
+  """
+  color: String
+
+  """
+
+  """
+  field: String
+
+  """
+
+  """
+  name: String
 }
 
 """
-Draft
+DataLabelsConfig
 """
-type Draft {
+type DataLabelsConfig {
   """
 
   """
-  dsDefault: NullString
+  color: String
 
   """
 
   """
-  dtCreated: DateTime!
+  enabled: Boolean
 
   """
 
   """
-  dtUpdated: DateTime!
-
-  """
-
-  """
-  idDraft: UUID!
-
-  """
-
-  """
-  idOption: NullUUID
-
-  """
-
-  """
-  idQuiz: UUID!
-
-  """
-
-  """
-  idSnippet: UUID!
-
-  """
-
-  """
-  idTopic: UUID!
-}
-
-"""
-Topic
-"""
-type Topic {
-  """
-
-  """
-  TopicChildren(idTopic: UUID, obClause: ClauseObjectInput): [Topic]
-
-  """
-
-  """
-  TopicOptions(idOption: UUID, obClause: ClauseObjectInput): [Option]
-
-  """
-
-  """
-  TopicParent(idTopic: UUID, obClause: ClauseObjectInput): [Topic]
-
-  """
-
-  """
-  TopicPhrases(idPhrase: UUID, obClause: ClauseObjectInput): [Phrase]
-
-  """
-
-  """
-  dsTitle: String!
-
-  """
-
-  """
-  dsTopic: NullString
-
-  """
-
-  """
-  dtCreated: DateTime!
-
-  """
-
-  """
-  dtUpdated: DateTime!
-
-  """
-
-  """
-  hasChild: Boolean!
-
-  """
-
-  """
-  idParent: NullUUID
-
-  """
-
-  """
-  idSection: UUID!
-
-  """
-
-  """
-  idTopic: UUID!
-
-  """
-
-  """
-  obMask: JSON!
-
-  """
-
-  """
-  obValidation: JSON!
-
-  """
-
-  """
-  tpField: FieldTypeEnum!
-}
-
-"""
-
-"""
-enum FieldTypeEnum {
-  """
-
-  """
-  image
-
-  """
-
-  """
-  phone
-
-  """
-
-  """
-  range
-
-  """
-
-  """
-  text
-
-  """
-
-  """
-  boolean
-
-  """
-
-  """
-  date
-
-  """
-
-  """
-  email
-
-  """
-
-  """
-  file
-
-  """
-
-  """
-  time
-
-  """
-
-  """
-  category
-
-  """
-
-  """
-  checkbox
-
-  """
-
-  """
-  number
-
-  """
-
-  """
-  radio
-}
-
-"""
-
-"""
-input ConditionObjectInput {
-  """
-
-  """
-  column: String!
-
-  """
-
-  """
-  operator: OperatorTypeEnum!
-
-  """
-
-  """
-  value: JSON!
-}
-
-"""
-Office
-"""
-type Office {
-  """
-
-  """
-  OfficeReports(idReport: UUID, obClause: ClauseObjectInput): [Report]
-
-  """
-
-  """
-  dsEmail: EmailAddress!
-
-  """
-
-  """
-  dsOffice: NullString
-
-  """
-
-  """
-  dtCreated: DateTime!
-
-  """
-
-  """
-  dtUpdated: DateTime!
-
-  """
-
-  """
-  idClient: UUID!
-
-  """
-
-  """
-  idOffice: UUID!
-
-  """
-
-  """
-  nmContact: String!
-
-  """
-
-  """
-  nmOffice: String!
-
-  """
-
-  """
-  obOffice: JSON
-
-  """
-
-  """
-  stOffice: RecordStatusEnum!
-}
-
-"""
-UUID is nullable
-"""
-scalar NullUUID
-
-"""
-Tag
-"""
-type Tag {
-  """
-
-  """
-  cdHexColor: String!
-
-  """
-
-  """
-  dtCreated: DateTime!
-
-  """
-
-  """
-  dtUpdated: DateTime!
-
-  """
-
-  """
-  idTag: UUID!
-
-  """
-
-  """
-  nmIndexed: String!
-
-  """
-
-  """
-  nmTag: String!
-}
-
-"""
-Entity
-"""
-type Entity {
-  """
-
-  """
-  dtCreated: DateTime!
-
-  """
-
-  """
-  dtUpdated: DateTime!
-
-  """
-
-  """
-  idEntity: UUID!
-
-  """
-
-  """
-  nmEntity: String!
-}
-
-"""
-Context
-"""
-type Context {
-  """
-
-  """
-  ContextAdmin: Admin
-}
-
-"""
-
-"""
-enum RecordStatusEnum {
-  """
-
-  """
-  active
-
-  """
-
-  """
-  inactive
-}
-
-"""
-Client
-"""
-type Client {
-  """
-
-  """
-  ClientOffices(idOffice: UUID, obClause: ClauseObjectInput): [Office]
-
-  """
-
-  """
-  ClientProjects(idProject: UUID, obClause: ClauseObjectInput): [Project]
-
-  """
-
-  """
-  dsClient: NullString
-
-  """
-
-  """
-  dtCreated: DateTime!
-
-  """
-
-  """
-  dtUpdated: DateTime!
-
-  """
-
-  """
-  flKeyAccount: Boolean!
-
-  """
-
-  """
-  idClient: UUID!
-
-  """
-
-  """
-  nmClient: String!
-
-  """
-
-  """
-  obClient: JSON!
-
-  """
-
-  """
-  stClient: RecordStatusEnum!
-}
-
-"""
-
-"""
-enum OperatorTypeEnum {
-  """
-
-  """
-  in
-
-  """
-
-  """
-  like
-
-  """
-
-  """
-  between
-
-  """
-
-  """
-  ilike
-
-  """
-
-  """
-  equal
-
-  """
-
-  """
-  not_equal
-
-  """
-
-  """
-  gt
-
-  """
-
-  """
-  gte
-
-  """
-
-  """
-  lte
-
-  """
-
-  """
-  not_like
-
-  """
-
-  """
-  not_in
-
-  """
-
-  """
-  not_between
-
-  """
-
-  """
-  lt
-
-  """
-
-  """
-  not_ilike
-}
-
-"""
-
-"""
-input ConclusionAnswerInput {
-  """
-
-  """
-  idAnswer: UUID!
-
-  """
-
-  """
-  dsComment: NullString = "{ false}"
-}
-
-"""
-
-"""
-input ItemInput {
-  """
-
-  """
-  idItem: UUID
-
-  """
-
-  """
-  idPhrase: NullUUID = "{00000000-0000-0000-0000-000000000000 false}"
-
-  """
-
-  """
-  dsPhrase: String
-}
-
-"""
-Admin
-"""
-type Admin {
-  """
-
-  """
-  dsEmail: EmailAddress!
-
-  """
-
-  """
-  dsToken: String!
-
-  """
-
-  """
-  dtCreated: DateTime!
-
-  """
-
-  """
-  dtUpdated: DateTime!
-
-  """
-
-  """
-  idAdmin: UUID!
-
-  """
-
-  """
-  nmAdmin: String!
-
-  """
-
-  """
-  obAdmin: JSON
-
-  """
-
-  """
-  stAdmin: RecordStatusEnum!
-}
-
-"""
-
-"""
-input OrderByObjectInput {
-  """
-
-  """
-  column: String!
-
-  """
-
-  """
-  sort: SortTypeEnum
+  style: StyleConfig
 }
 
 """
@@ -1009,102 +1704,367 @@ type Phrase {
 """
 
 """
-enum ProjectStatusEnum {
+input TitleAxisInput {
   """
 
   """
-  active
+  align: String
 
   """
 
   """
-  archived
+  text: String
 }
 
 """
-Private GraphQL Queries
+
 """
-type PrivateQuery {
+input WidgetColumnInput {
   """
 
   """
-  Admins(idAdmin: UUID, obClause: ClauseObjectInput): [Admin]
-
-  """
-
-  """
-  Clients(idClient: UUID, obClause: ClauseObjectInput): [Client]
+  popover: String
 
   """
 
   """
-  Context: Context
+  asc: Boolean
 
   """
 
   """
-  Entities(idEntity: UUID, obClause: ClauseObjectInput): [Entity]
+  align: String
 
   """
 
   """
-  Files(
-    idFile: UUID
-    idRecord: UUID
-    idEntity: UUID
-    obClause: ClauseObjectInput
-  ): [File]
+  order: Int
 
   """
 
   """
-  Goals(idGoal: UUID, obClause: ClauseObjectInput): [Goal]
+  field: String
 
   """
 
   """
-  Me: Admin
+  label: String
 
   """
 
   """
-  Projects(obClause: ClauseObjectInput, idProject: UUID): [Project]
+  visible: Boolean
 
   """
 
   """
-  Sections(idSection: UUID, obClause: ClauseObjectInput): [Section]
+  width: Float
 
   """
 
   """
-  Segments(idSegment: UUID, obClause: ClauseObjectInput): [Segment]
-
-  """
-
-  """
-  Tags(idTag: UUID, idRecord: UUID): [Tag]
-
-  """
-
-  """
-  Token: Boolean
+  sorting: Boolean
 }
 
 """
-Answer
+SlideConfig
 """
-type Answer {
+type SlideConfig {
   """
 
   """
-  AnswerOptions: [Option]
+  backgroundColor: String
 
   """
 
   """
-  dsAnswer: NullString
+  backgroundImage: String
 
+  """
+
+  """
+  color: String
+
+  """
+
+  """
+  height: Float!
+
+  """
+
+  """
+  theme: String
+
+  """
+
+  """
+  visible: Boolean
+
+  """
+
+  """
+  width: Float!
+}
+
+"""
+
+"""
+input SlideConfigInput {
+  """
+
+  """
+  theme: NullString
+
+  """
+
+  """
+  visible: Boolean
+
+  """
+
+  """
+  height: Float!
+
+  """
+
+  """
+  width: Float!
+
+  """
+
+  """
+  color: NullString
+
+  """
+
+  """
+  backgroundColor: NullString
+
+  """
+
+  """
+  backgroundImage: NullString
+}
+
+"""
+WidgetConfig
+"""
+type WidgetConfig {
+  """
+
+  """
+  backgroundColor: NullString
+
+  """
+
+  """
+  backgroundPosition: NullString
+
+  """
+
+  """
+  backgroundSize: NullString
+
+  """
+
+  """
+  borderColor: String
+
+  """
+
+  """
+  borderStyle: String
+
+  """
+
+  """
+  borderWidth: Int
+
+  """
+
+  """
+  cache: JSON
+
+  """
+
+  """
+  color: String
+
+  """
+
+  """
+  colorAxis: ColorAxisConfig
+
+  """
+
+  """
+  columns: [WidgetColumnConfig]
+
+  """
+
+  """
+  controllers: [String]
+
+  """
+
+  """
+  currentPage: Int
+
+  """
+
+  """
+  dataLabels: String
+
+  """
+
+  """
+  file: NullUUID
+
+  """
+
+  """
+  font: FontConfig
+
+  """
+
+  """
+  height: Float!
+
+  """
+
+  """
+  highlights: [HighlightConfig]
+
+  """
+
+  """
+  icon: String
+
+  """
+
+  """
+  innerSize: String
+
+  """
+
+  """
+  left: Float!
+
+  """
+
+  """
+  legend: LegendConfig
+
+  """
+
+  """
+  max: Int
+
+  """
+
+  """
+  orderBy: OrderByConfig
+
+  """
+
+  """
+  pointFormat: String
+
+  """
+
+  """
+  rotation: Int
+
+  """
+
+  """
+  rowsLimit: Int
+
+  """
+
+  """
+  selectedMetric: String
+
+  """
+
+  """
+  series: [SerieConfig]
+
+  """
+
+  """
+  table: WidgetTableConfig
+
+  """
+
+  """
+  top: Float!
+
+  """
+
+  """
+  videoId: String
+
+  """
+
+  """
+  videoSrc: String
+
+  """
+
+  """
+  videoThumbnail: String
+
+  """
+
+  """
+  videoType: String
+
+  """
+
+  """
+  videoUrl: String
+
+  """
+
+  """
+  width: Float!
+
+  """
+
+  """
+  yAxes: [YAxisConfig]
+
+  """
+
+  """
+  yAxis: YAxisConfig @deprecated(reason: "Use yAxes instead")
+}
+
+"""
+MarkerConfig
+"""
+type MarkerConfig {
+  """
+
+  """
+  enabled: Boolean
+
+  """
+
+  """
+  fillColor: String
+
+  """
+
+  """
+  symbol: String
+}
+
+"""
+Property
+"""
+type Property {
   """
 
   """
@@ -1118,962 +2078,22 @@ type Answer {
   """
 
   """
-  idAnswer: UUID!
+  flAllowRating: Boolean!
 
   """
 
   """
-  idOffice: UUID!
+  idAttribute: UUID!
 
   """
 
   """
-  idProject: UUID!
-
-  """
-
-  """
-  idQuiz: UUID!
+  idProperty: UUID!
 
   """
 
   """
   idReport: UUID!
-
-  """
-
-  """
-  idTopic: UUID!
-}
-
-"""
-
-"""
-input OfficeInput {
-  """
-
-  """
-  dsEmail: EmailAddress!
-
-  """
-
-  """
-  dsOffice: NullString
-
-  """
-
-  """
-  nmOffice: String!
-
-  """
-
-  """
-  nmContact: String!
-}
-
-"""
-
-"""
-input DraftInput {
-  """
-
-  """
-  idOption: UUID!
-}
-
-"""
-Item
-"""
-type Item {
-  """
-
-  """
-  dsPhrase: String!
-
-  """
-
-  """
-  dtCreated: DateTime!
-
-  """
-
-  """
-  dtUpdated: DateTime!
-
-  """
-
-  """
-  idConclusion: UUID!
-
-  """
-
-  """
-  idItem: UUID!
-
-  """
-
-  """
-  idPhrase: NullUUID
-}
-
-"""
-Snippet
-"""
-type Snippet {
-  """
-
-  """
-  SnippetDrafts(idDraft: UUID, obClause: ClauseObjectInput): [Draft]
-
-  """
-
-  """
-  SnippetTopic(idTopic: UUID, obClause: ClauseObjectInput): Topic
-
-  """
-
-  """
-  dtCreated: DateTime!
-
-  """
-
-  """
-  dtUpdated: DateTime!
-
-  """
-
-  """
-  idQuiz: UUID!
-
-  """
-
-  """
-  idSnippet: UUID!
-
-  """
-
-  """
-  idTopic: UUID!
-}
-
-"""
-
-"""
-input AdminObjectInput {
-  """
-
-  """
-  avatar: String
-}
-
-"""
-I18n
-"""
-type I18n {
-  """
-
-  """
-  dsEnUS: String!
-
-  """
-
-  """
-  dsEsES: String!
-
-  """
-
-  """
-  dsMsgKey: String!
-
-  """
-
-  """
-  dsPtBR: String!
-
-  """
-
-  """
-  dtCreated: DateTime!
-
-  """
-
-  """
-  dtUpdated: DateTime!
-
-  """
-
-  """
-  idI18n: UUID!
-}
-
-"""
-
-"""
-input SnippetInput {
-  """
-
-  """
-  idTopic: UUID!
-
-  """
-
-  """
-  obDrafts: [DraftInput]
-}
-
-"""
-NullDateTime is a nullable DateTime
-"""
-scalar NullDateTime
-
-"""
-
-"""
-input TagsObjectInput {
-  """
-
-  """
-  operator: ArrayOperatorTypeEnum!
-
-  """
-
-  """
-  values: [String]!
-}
-
-"""
-Option
-"""
-type Option {
-  """
-
-  """
-  dsComment: NullString
-
-  """
-
-  """
-  dsLabel: String!
-
-  """
-
-  """
-  dsOption: NullString
-
-  """
-
-  """
-  dtCreated: DateTime!
-
-  """
-
-  """
-  dtUpdated: DateTime!
-
-  """
-
-  """
-  flComment: Boolean!
-
-  """
-
-  """
-  idOption: UUID!
-
-  """
-
-  """
-  idTopic: UUID!
-
-  """
-
-  """
-  stOption: RecordStatusEnum!
-}
-
-"""
-Goal
-"""
-type Goal {
-  """
-
-  """
-  dsGoal: NullString
-
-  """
-
-  """
-  dtCreated: DateTime!
-
-  """
-
-  """
-  dtUpdated: DateTime!
-
-  """
-
-  """
-  idGoal: UUID!
-
-  """
-
-  """
-  nmGoal: String!
-}
-
-"""
-File
-"""
-type File {
-  """
-
-  """
-  dsMime: String!
-
-  """
-
-  """
-  dtCreated: DateTime!
-
-  """
-
-  """
-  dtUpdated: DateTime!
-
-  """
-
-  """
-  idClient: NullUUID
-
-  """
-
-  """
-  idEntity: UUID!
-
-  """
-
-  """
-  idFile: UUID!
-
-  """
-
-  """
-  idRecord: UUID!
-
-  """
-
-  """
-  nbSize: Int!
-
-  """
-
-  """
-  nmFile: String!
-}
-
-"""
-Private GraphQL Mutations
-"""
-type PrivateMutation {
-  """
-
-  """
-  AddAdmin(nmAdmin: String!, obAdmin: AdminObjectInput, idRole: UUID!): Admin
-
-  """
-
-  """
-  AddAnswer(
-    idReport: UUID!
-    idTopic: UUID!
-    dsAnswer: NullString
-    obOptions: [AnswerOptionInput]
-  ): Answer
-
-  """
-
-  """
-  AddClient(
-    nmClient: String!
-    dsClient: NullString
-    flKeyAccount: Boolean!
-    obOffices: [OfficeInput]
-  ): Client
-
-  """
-
-  """
-  AddConclusion(
-    obAnswers: [ConclusionAnswerInput]
-    obItems: [ItemInput]
-    idReport: UUID!
-    idTopic: UUID!
-  ): Conclusion
-
-  """
-
-  """
-  AddFile(
-    flCompress: Boolean = true
-    idFile: UUID!
-    idEntity: UUID!
-    idRecord: UUID!
-  ): File
-
-  """
-
-  """
-  AddGoal(nmGoal: String!, dsGoal: NullString): Goal
-
-  """
-
-  """
-  AddOffice(
-    idClient: UUID!
-    nmOffice: String!
-    nmContact: String!
-    dsEmail: EmailAddress!
-    dsOffice: NullString
-  ): Office
-
-  """
-
-  """
-  AddPhrase(idTopic: UUID!, dsPhrase: String!): Phrase
-
-  """
-
-  """
-  AddProject(
-    obGoals: [UUID]
-    idClient: UUID!
-    idSegment: UUID!
-    nmProject: String!
-    dsProject: NullString
-  ): Project
-
-  """
-
-  """
-  AddQuiz(
-    idProject: UUID!
-    nmQuiz: String!
-    dsQuiz: NullString
-    obSnippets: [SnippetInput]
-  ): Quiz
-
-  """
-
-  """
-  AddReport(
-    idQuiz: UUID!
-    obOffices: [UUID]!
-    dtExpiration: DateTime!
-  ): [Report]
-
-  """
-
-  """
-  AddSection(
-    dsSection: NullString
-    idParent: NullUUID
-    nmSection: String!
-  ): Section
-
-  """
-
-  """
-  AddSegment(nmSegment: String!, dsSegment: NullString): Segment
-
-  """
-
-  """
-  AddTag(nmTag: String!, cdHexColor: String = "FFFFFF"): Tag
-
-  """
-
-  """
-  AddTopic(
-    idSection: UUID!
-    idParent: NullUUID
-    dsTitle: String!
-    dsTopic: NullString
-    tpField: FieldTypeEnum!
-    obOptions: [OptionInput]
-    obSegments: [UUID]
-  ): Topic
-
-  """
-
-  """
-  ChangePassword(dsOld: String!, dsNew: String!): Admin
-
-  """
-
-  """
-  CopyFile(idRecord: UUID!, idFile: UUID!, idEntity: UUID!): File
-
-  """
-
-  """
-  DelAdmin(idAdmin: UUID!): Admin
-
-  """
-
-  """
-  DelAnswer(idAnswer: UUID!): Answer
-
-  """
-
-  """
-  DelClient(idClient: UUID!): Client
-
-  """
-
-  """
-  DelConclusion(idConclusion: UUID!): Conclusion
-
-  """
-
-  """
-  DelFile(idFile: UUID!): File
-
-  """
-
-  """
-  DelGoal(idGoal: UUID!): Goal
-
-  """
-
-  """
-  DelI18n(idI18n: UUID!): I18n
-
-  """
-
-  """
-  DelOffice(idOffice: UUID!): Office
-
-  """
-
-  """
-  DelPhrase(idPhrase: UUID!): Phrase
-
-  """
-
-  """
-  DelProject(idProject: UUID!): Project
-
-  """
-
-  """
-  DelQuiz(idQuiz: UUID!): Quiz
-
-  """
-
-  """
-  DelReport(idReport: UUID!): Report
-
-  """
-
-  """
-  DelSection(idSection: UUID!): Section
-
-  """
-
-  """
-  DelSegment(idSegment: UUID!): Segment
-
-  """
-
-  """
-  DelTag(idTag: UUID!): Tag
-
-  """
-
-  """
-  DelTopic(idTopic: UUID!): Topic
-
-  """
-
-  """
-  Me: Admin
-
-  """
-
-  """
-  MoveFile(idEntity: UUID!, idRecord: UUID!, idFile: UUID!): File
-
-  """
-
-  """
-  RenameFile(idFile: UUID!, nmFile: String!): File
-
-  """
-
-  """
-  ReplaceFile(
-    idNew: UUID!
-    nmFile: String!
-    flCompress: Boolean = true
-    idOld: UUID!
-  ): File
-
-  """
-
-  """
-  SetAdmin(nmAdmin: String!, obAdmin: AdminObjectInput): Admin
-
-  """
-
-  """
-  SetAdminStatus(idAdmin: String!, stAdmin: RecordStatusEnum!): Admin
-
-  """
-
-  """
-  SetAnswer(
-    idAnswer: UUID!
-    dsAnswer: NullString
-    obOptions: [AnswerOptionInput]
-  ): Answer
-
-  """
-
-  """
-  SetClient(
-    stClient: RecordStatusEnum!
-    idClient: UUID!
-    nmClient: String!
-    dsClient: NullString = "{ false}"
-    flKeyAccount: Boolean!
-  ): Client
-
-  """
-
-  """
-  SetConclusion(
-    idConclusion: UUID!
-    dsConclusion: NullString
-    obAnswers: [ConclusionAnswerInput]
-    obItems: [ItemInput]
-  ): Conclusion
-
-  """
-
-  """
-  SetGoal(dsGoal: NullString = "{ false}", idGoal: UUID!, nmGoal: String!): Goal
-
-  """
-
-  """
-  SetI18n(
-    dsMsgKey: String!
-    dsEnUS: String!
-    dsPtBR: String!
-    dsEsES: String!
-  ): I18n
-
-  """
-
-  """
-  SetOffice(
-    dsEmail: EmailAddress!
-    dsOffice: NullString = "{ false}"
-    stOffice: RecordStatusEnum!
-    idOffice: UUID!
-    nmOffice: String!
-    nmContact: String!
-  ): Office
-
-  """
-
-  """
-  SetPhrase(
-    idPhrase: UUID!
-    dsPhrase: String!
-    stPhrase: RecordStatusEnum!
-  ): Phrase
-
-  """
-
-  """
-  SetProject(
-    idProject: UUID!
-    nmProject: String!
-    dsProject: NullString = "{ false}"
-    stProject: ProjectStatusEnum!
-    obGoals: [UUID]
-  ): Project
-
-  """
-
-  """
-  SetQuiz(
-    idQuiz: UUID!
-    nmQuiz: String!
-    dsQuiz: NullString = "{ false}"
-    stQuiz: RecordStatusEnum!
-    obSnippets: [SnippetInput]
-  ): Quiz
-
-  """
-
-  """
-  SetReport(
-    idReport: UUID!
-    nmReport: String!
-    dsReport: NullString = "{ false}"
-    stReport: RecordStatusEnum!
-    dtExpiration: DateTime!
-  ): Report
-
-  """
-
-  """
-  SetSection(
-    idSection: UUID!
-    idParent: NullUUID = "{00000000-0000-0000-0000-000000000000 false}"
-    nmSection: String!
-    dsSection: NullString = "{ false}"
-    stSection: RecordStatusEnum!
-  ): Section
-
-  """
-
-  """
-  SetSegment(
-    idSegment: UUID!
-    nmSegment: String!
-    dsSegment: NullString = "{ false}"
-  ): Segment
-
-  """
-
-  """
-  SetTag(nmTag: String!, cdHexColor: String!, idTag: UUID!): Tag
-
-  """
-
-  """
-  SetTopic(
-    idParent: NullUUID
-    dsTitle: String!
-    dsTopic: NullString = "{ false}"
-    tpField: FieldTypeEnum!
-    obOptions: [OptionInput]
-    obSegments: [UUID]
-    idTopic: UUID!
-  ): Topic
-
-  """
-
-  """
-  SignOut: Boolean
-
-  """
-
-  """
-  TagRecord(idEntity: UUID!, idRecord: UUID!, obTags: [String]): [Tagged]
-}
-
-"""
-Tagged
-"""
-type Tagged {
-  """
-
-  """
-  cdHexColor: String!
-
-  """
-
-  """
-  dtCreated: DateTime!
-
-  """
-
-  """
-  dtUpdated: DateTime!
-
-  """
-
-  """
-  idEntity: UUID!
-
-  """
-
-  """
-  idRecord: UUID!
-
-  """
-
-  """
-  idTag: UUID!
-
-  """
-
-  """
-  idTagged: UUID!
-
-  """
-
-  """
-  nmIndexed: String!
-
-  """
-
-  """
-  nmTag: String!
-}
-
-"""
-
-"""
-enum ArrayOperatorTypeEnum {
-  """
-  have elements in common ([1,4,3] && [2,1])
-  """
-  overlap
-
-  """
-  contains ([1,4,3] @> [3,1])
-  """
-  contain
-
-  """
-  is contained by ([2,7] <@ [1,7,4,2,6])
-  """
-  contained
-}
-
-"""
-
-"""
-input OptionInput {
-  """
-
-  """
-  flComment: Boolean = false
-
-  """
-
-  """
-  stOption: RecordStatusEnum
-
-  """
-
-  """
-  idOption: UUID
-
-  """
-
-  """
-  dsLabel: String!
-
-  """
-
-  """
-  dsOption: NullString = "{ false}"
-}
-
-"""
-
-"""
-input GroupByObjectInput {
-  """
-
-  """
-  columns: [String]
-}
-
-"""
-
-"""
-enum ReportStatusEnum {
-  """
-
-  """
-  created
-
-  """
-
-  """
-  ongoing
-
-  """
-
-  """
-  finished
-
-  """
-
-  """
-  expired
-
-  """
-
-  """
-  archived
-}
-
-"""
-The `DateTime` scalar type represents a DateTime. The DateTime is serialized as an RFC 3339 quoted string
-"""
-scalar DateTime
-
-"""
-
-"""
-enum AggregateTypeEnum {
-  """
-
-  """
-  avg
-
-  """
-
-  """
-  count
-
-  """
-
-  """
-  max
-
-  """
-
-  """
-  min
-
-  """
-
-  """
-  sum
-}
-
-"""
-A valid universally unique identifier
-"""
-scalar UUID
-
-"""
-The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf)
-"""
-scalar JSON
-
-"""
-
-"""
-input PaginationObjectInput {
-  """
-
-  """
-  limit: Int!
-
-  """
-
-  """
-  offset: Int!
 }
 
 """
@@ -2083,12 +2103,12 @@ type Section {
   """
 
   """
-  SectionChildren(idSection: UUID, obClause: ClauseObjectInput): [Section]
+  SectionChildren(obClause: ClauseObjectInput, idSection: UUID): [Section]
 
   """
 
   """
-  SectionParent(obClause: ClauseObjectInput, idSection: UUID): [Section]
+  SectionParent(idSection: UUID, obClause: ClauseObjectInput): [Section]
 
   """
 
@@ -2142,9 +2162,109 @@ type Section {
 }
 
 """
+Tag
+"""
+type Tag {
+  """
+
+  """
+  cdHexColor: String!
+
+  """
+
+  """
+  dtCreated: DateTime!
+
+  """
+
+  """
+  dtUpdated: DateTime!
+
+  """
+
+  """
+  idTag: UUID!
+
+  """
+
+  """
+  nmIndexed: String!
+
+  """
+
+  """
+  nmTag: String!
+}
 
 """
-input AnswerOptionInput {
+Boolean is a nullable bool
+"""
+scalar NullBoolean
+
+"""
+
+"""
+input VariableObjectInput {
+  """
+
+  """
+  name: String!
+
+  """
+
+  """
+  value: JSON!
+}
+
+"""
+The `DateTime` scalar type represents a DateTime. The DateTime is serialized as an RFC 3339 quoted string
+"""
+scalar DateTime
+
+"""
+
+"""
+input StyleInput {
+  """
+
+  """
+  textOutline: String
+
+  """
+
+  """
+  fontWeight: String
+}
+
+"""
+Option
+"""
+type Option {
+  """
+
+  """
+  dsOption: String!
+
+  """
+
+  """
+  dtCreated: DateTime!
+
+  """
+
+  """
+  dtUpdated: DateTime!
+
+  """
+
+  """
+  idAttribute: UUID!
+
+  """
+
+  """
+  idCategory: UUID!
+
   """
 
   """
@@ -2153,5 +2273,2098 @@ input AnswerOptionInput {
   """
 
   """
+  idTopic: UUID!
+
+  """
+
+  """
+  stOption: RecordStatusEnum!
+}
+
+"""
+HighlightConfig
+"""
+type HighlightConfig {
+  """
+
+  """
+  abbreviation: String
+
+  """
+
+  """
+  comparisonValue: Float
+
+  """
+
+  """
+  complement: String
+
+  """
+
+  """
+  complementType: String
+
+  """
+
+  """
+  field: String
+
+  """
+
+  """
+  goal: Float
+
+  """
+
+  """
+  index: Int
+
+  """
+
+  """
+  inverseComparison: Boolean
+
+  """
+
+  """
+  label: String
+
+  """
+
+  """
+  maskedValue: String
+
+  """
+
+  """
+  precision: Int
+
+  """
+
+  """
+  rawValue: Float
+}
+
+"""
+ColorAxisConfig
+"""
+type ColorAxisConfig {
+  """
+
+  """
+  min: Float
+
+  """
+
+  """
+  stops: [[JSON]]
+}
+
+"""
+Category
+"""
+type Category {
+  """
+
+  """
+  CategoryAttributes(
+    idAttribute: UUID
+    obClause: ClauseObjectInput
+  ): [Attribute]
+
+  """
+
+  """
+  dsCategory: String!
+
+  """
+
+  """
+  dtCreated: DateTime!
+
+  """
+
+  """
+  dtUpdated: DateTime!
+
+  """
+
+  """
+  idCategory: UUID!
+
+  """
+
+  """
+  stCategory: RecordStatusEnum!
+}
+
+"""
+Int is a nullable int
+"""
+scalar NullInt
+
+"""
+
+"""
+input WidgetTableInput {
+  """
+
+  """
+  headerColor: String
+
+  """
+
+  """
+  bodyFontFamily: String
+
+  """
+
+  """
+  paginatorPages: Int
+
+  """
+
+  """
+  bodyColor: String
+
+  """
+
+  """
+  headerFontSize: String
+
+  """
+
+  """
+  paginatorColor: String
+
+  """
+
+  """
+  bodyFontSize: String
+
+  """
+
+  """
+  allowPaginator: Boolean
+
+  """
+
+  """
+  entriesLabel: String
+
+  """
+
+  """
+  headerFontFamily: String
+
+  """
+
+  """
+  paginatorFontColor: String
+
+  """
+
+  """
+  bodyFontColor: String
+
+  """
+
+  """
+  headerFontColor: String
+}
+
+"""
+
+"""
+enum AggregateTypeEnum {
+  """
+
+  """
+  max
+
+  """
+
+  """
+  min
+
+  """
+
+  """
+  sum
+
+  """
+
+  """
+  avg
+
+  """
+
+  """
+  count
+}
+
+"""
+
+"""
+input SlideReorderInput {
+  """
+
+  """
+  idSlide: UUID!
+
+  """
+
+  """
+  nbSlide: Int!
+}
+
+"""
+
+"""
+enum OperatorTypeEnum {
+  """
+
+  """
+  lte
+
+  """
+
+  """
+  not_ilike
+
+  """
+
+  """
+  equal
+
+  """
+
+  """
+  gte
+
+  """
+
+  """
+  lt
+
+  """
+
+  """
+  ilike
+
+  """
+
+  """
+  not_equal
+
+  """
+
+  """
+  in
+
+  """
+
+  """
+  not_in
+
+  """
+
+  """
+  gt
+
+  """
+
+  """
+  like
+
+  """
+
+  """
+  between
+
+  """
+
+  """
+  not_like
+
+  """
+
+  """
+  not_between
+}
+
+"""
+
+"""
+input ColorAxisInput {
+  """
+
+  """
+  stops: [[JSON]]
+
+  """
+
+  """
+  min: Float
+}
+
+"""
+
+"""
+input SnippetInput {
+  """
+
+  """
+  idTopic: UUID!
+
+  """
+
+  """
+  obDrafts: [DraftInput]
+}
+
+"""
+StyleAxisConfig
+"""
+type StyleAxisConfig {
+  """
+
+  """
+  color: String
+}
+
+"""
+Rating
+"""
+type Rating {
+  """
+
+  """
+  dtCreated: DateTime!
+
+  """
+
+  """
+  dtUpdated: DateTime!
+
+  """
+
+  """
+  idAttribute: UUID!
+
+  """
+
+  """
+  idCompetitor: NullUUID
+
+  """
+
+  """
+  idOffice: UUID!
+
+  """
+
+  """
+  idRating: UUID!
+
+  """
+
+  """
+  idReport: UUID!
+
+  """
+
+  """
+  nbRating: Int!
+}
+
+"""
+FontConfig
+"""
+type FontConfig {
+  """
+
+  """
+  color: String
+
+  """
+
+  """
+  fontFamily: String
+
+  """
+
+  """
+  fontSize: String
+
+  """
+
+  """
+  fontStyle: String
+
+  """
+
+  """
+  fontWeight: String
+
+  """
+
+  """
+  text: String
+
+  """
+
+  """
+  textAlign: String
+
+  """
+
+  """
+  textDecoration: String
+
+  """
+
+  """
+  verticalAlign: String
+}
+
+"""
+Competitor
+"""
+type Competitor {
+  """
+
+  """
+  dsCompetitor: NullString
+
+  """
+
+  """
+  dtCreated: DateTime!
+
+  """
+
+  """
+  dtUpdated: DateTime!
+
+  """
+
+  """
+  flAllowRating: Boolean!
+
+  """
+
+  """
+  idCompetitor: UUID!
+
+  """
+
+  """
+  idReport: UUID!
+
+  """
+
+  """
+  nmCompetitor: String!
+}
+
+"""
+File
+"""
+type File {
+  """
+
+  """
+  dsMime: String!
+
+  """
+
+  """
+  dtCreated: DateTime!
+
+  """
+
+  """
+  dtUpdated: DateTime!
+
+  """
+
+  """
+  idClient: NullUUID
+
+  """
+
+  """
+  idEntity: UUID!
+
+  """
+
+  """
+  idFile: UUID!
+
+  """
+
+  """
+  idRecord: UUID!
+
+  """
+
+  """
+  nbSize: Int!
+
+  """
+
+  """
+  nmFile: String!
+}
+
+"""
+Tagged
+"""
+type Tagged {
+  """
+
+  """
+  cdHexColor: String!
+
+  """
+
+  """
+  dtCreated: DateTime!
+
+  """
+
+  """
+  dtUpdated: DateTime!
+
+  """
+
+  """
+  idEntity: UUID!
+
+  """
+
+  """
+  idRecord: UUID!
+
+  """
+
+  """
+  idTag: UUID!
+
+  """
+
+  """
+  idTagged: UUID!
+
+  """
+
+  """
+  nmIndexed: String!
+
+  """
+
+  """
+  nmTag: String!
+}
+
+"""
+Float is a nullable float
+"""
+scalar NullFloat
+
+"""
+
+"""
+input OrderByInput {
+  """
+
+  """
+  field: String
+
+  """
+
+  """
+  asc: Boolean
+}
+
+"""
+
+"""
+input PaginationObjectInput {
+  """
+
+  """
+  offset: Int!
+
+  """
+
+  """
+  limit: Int!
+}
+
+"""
+SerieConfig
+"""
+type SerieConfig {
+  """
+
+  """
+  color: String
+
+  """
+
+  """
+  dataLabels: DataLabelsConfig
+
+  """
+
+  """
+  field: String
+
+  """
+
+  """
+  fillOpacity: Float
+
+  """
+
+  """
+  lineWidth: Float
+
+  """
+
+  """
+  marker: MarkerConfig
+
+  """
+
+  """
+  name: String
+
+  """
+
+  """
+  type: String
+
+  """
+
+  """
+  yAxis: Int
+
+  """
+
+  """
+  zIndex: Int
+}
+
+"""
+Question
+"""
+type Question {
+  """
+
+  """
+  dsQuestion: String!
+
+  """
+
+  """
+  dtCreated: DateTime!
+
+  """
+
+  """
+  dtUpdated: DateTime!
+
+  """
+
+  """
+  idQuestion: UUID!
+
+  """
+
+  """
+  idTopic: UUID!
+
+  """
+
+  """
+  stQuestion: RecordStatusEnum!
+}
+
+"""
+
+"""
+input YAxisInput {
+  """
+
+  """
+  title: TitleAxisInput
+
+  """
+
+  """
+  minorGridLineWidth: Float
+
+  """
+
+  """
+  min: Float
+
+  """
+
+  """
+  labels: LabelsAxisInput
+
+  """
+
+  """
+  id: String
+
+  """
+
+  """
+  endOnTick: Boolean
+
+  """
+
+  """
+  opposite: Boolean
+
+  """
+
+  """
+  gridLineWidth: Float
+
+  """
+
+  """
+  max: Float
+}
+
+"""
+
+"""
+input ClauseObjectInput {
+  """
+
+  """
+  conditions: [ConditionObjectInput]
+
+  """
+
+  """
+  variables: [VariableObjectInput]
+
+  """
+
+  """
+  tags: TagsObjectInput
+
+  """
+
+  """
+  order: [OrderByObjectInput]
+
+  """
+
+  """
+  group: GroupByObjectInput
+
+  """
+
+  """
+  pagination: PaginationObjectInput
+
+  """
+
+  """
+  select: [SelectObjectInput]
+}
+
+"""
+Draft
+"""
+type Draft {
+  """
+
+  """
+  dsDefault: NullString
+
+  """
+
+  """
+  dtCreated: DateTime!
+
+  """
+
+  """
+  dtUpdated: DateTime!
+
+  """
+
+  """
+  idDraft: UUID!
+
+  """
+
+  """
+  idOption: NullUUID
+
+  """
+
+  """
+  idQuiz: UUID!
+
+  """
+
+  """
+  idSnippet: UUID!
+
+  """
+
+  """
+  idTopic: UUID!
+}
+
+"""
+NullDateTime is a nullable DateTime
+"""
+scalar NullDateTime
+
+"""
+UUID is nullable
+"""
+scalar NullUUID
+
+"""
+Goal
+"""
+type Goal {
+  """
+
+  """
+  dsGoal: NullString
+
+  """
+
+  """
+  dtCreated: DateTime!
+
+  """
+
+  """
+  dtUpdated: DateTime!
+
+  """
+
+  """
+  idGoal: UUID!
+
+  """
+
+  """
+  nmGoal: String!
+}
+
+"""
+
+"""
+enum ReportStatusEnum {
+  """
+
+  """
+  created
+
+  """
+
+  """
+  ongoing
+
+  """
+
+  """
+  finished
+
+  """
+
+  """
+  expired
+
+  """
+
+  """
+  archived
+}
+
+"""
+
+"""
+input EmbedReorderInput {
+  """
+
+  """
+  idEmbed: UUID!
+
+  """
+
+  """
+  nbIndex: Int!
+}
+
+"""
+Answer
+"""
+type Answer {
+  """
+
+  """
+  dtCreated: DateTime!
+
+  """
+
+  """
+  dtUpdated: DateTime!
+
+  """
+
+  """
+  idAnswer: UUID!
+
+  """
+
+  """
+  idAttribute: UUID!
+
+  """
+
+  """
+  idCategory: UUID!
+
+  """
+
+  """
+  idOffice: UUID!
+
+  """
+
+  """
+  idOption: UUID!
+
+  """
+
+  """
+  idProject: UUID!
+
+  """
+
+  """
+  idQuiz: UUID!
+
+  """
+
+  """
+  idReport: UUID!
+
+  """
+
+  """
+  idTopic: UUID!
+}
+
+"""
+
+"""
+input ConclusionAnswerInput {
+  """
+
+  """
+  idAnswer: UUID!
+
+  """
+
+  """
   dsComment: NullString = "{ false}"
+}
+
+"""
+Client
+"""
+type Client {
+  """
+
+  """
+  ClientOffices(idOffice: UUID, obClause: ClauseObjectInput): [Office]
+
+  """
+
+  """
+  ClientProjects(idProject: UUID, obClause: ClauseObjectInput): [Project]
+
+  """
+
+  """
+  dsClient: NullString
+
+  """
+
+  """
+  dtCreated: DateTime!
+
+  """
+
+  """
+  dtUpdated: DateTime!
+
+  """
+
+  """
+  idClient: UUID!
+
+  """
+
+  """
+  nmClient: String!
+
+  """
+
+  """
+  obClient: JSON!
+
+  """
+
+  """
+  stClient: RecordStatusEnum!
+}
+
+"""
+WidgetColumnConfig
+"""
+type WidgetColumnConfig {
+  """
+
+  """
+  align: String
+
+  """
+
+  """
+  asc: Boolean
+
+  """
+
+  """
+  field: String
+
+  """
+
+  """
+  label: String
+
+  """
+
+  """
+  order: Int
+
+  """
+
+  """
+  popover: String
+
+  """
+
+  """
+  sorting: Boolean
+
+  """
+
+  """
+  visible: Boolean
+
+  """
+
+  """
+  width: Float
+}
+
+"""
+
+"""
+input GroupByObjectInput {
+  """
+
+  """
+  columns: [String]
+}
+
+"""
+Report
+"""
+type Report {
+  """
+
+  """
+  ReportAnswers(idAnswer: UUID, obClause: ClauseObjectInput): [Answer]
+
+  """
+
+  """
+  ReportAttributes: [Attribute]
+
+  """
+
+  """
+  ReportCompetitor(
+    idCompetitor: UUID
+    obClause: ClauseObjectInput
+  ): [Competitor]
+
+  """
+
+  """
+  ReportConclusions(
+    idConclusion: UUID
+    obClause: ClauseObjectInput
+  ): [Conclusion]
+
+  """
+
+  """
+  ReportEmbeds(idEmbed: [UUID], obClause: ClauseObjectInput): [Embed]
+
+  """
+
+  """
+  ReportProperties(idProperty: UUID, obClause: ClauseObjectInput): [Property]
+
+  """
+
+  """
+  ReportRatings(idRating: UUID, obClause: ClauseObjectInput): [Rating]
+
+  """
+
+  """
+  ReportSlides(idSlide: UUID, nbSlide: Int): [Slide]
+
+  """
+
+  """
+  cdReport: String!
+
+  """
+
+  """
+  dsReport: NullString
+
+  """
+
+  """
+  dtCreated: DateTime!
+
+  """
+
+  """
+  dtExpiration: DateTime!
+
+  """
+
+  """
+  dtUpdated: DateTime!
+
+  """
+
+  """
+  idOffice: UUID!
+
+  """
+
+  """
+  idProject: UUID!
+
+  """
+
+  """
+  idQuiz: UUID!
+
+  """
+
+  """
+  idReport: UUID!
+
+  """
+
+  """
+  nmReport: String!
+
+  """
+
+  """
+  obReport: JSON
+
+  """
+
+  """
+  stReport: ReportStatusEnum!
+
+  """
+
+  """
+  tpReport: ReportTypeEnum!
+
+  """
+
+  """
+  tpScope: ScopeTypeEnum!
+}
+
+"""
+I18n
+"""
+type I18n {
+  """
+
+  """
+  dsEnUS: String!
+
+  """
+
+  """
+  dsEsES: String!
+
+  """
+
+  """
+  dsMsgKey: String!
+
+  """
+
+  """
+  dsPtBR: String!
+
+  """
+
+  """
+  dtCreated: DateTime!
+
+  """
+
+  """
+  dtUpdated: DateTime!
+
+  """
+
+  """
+  idI18n: UUID!
+}
+
+"""
+Private GraphQL Queries
+"""
+type PrivateQuery {
+  """
+
+  """
+  Admins(idAdmin: UUID, obClause: ClauseObjectInput): [Admin]
+
+  """
+
+  """
+  Attributes(idAttribute: UUID, obClause: ClauseObjectInput): [Attribute]
+
+  """
+
+  """
+  Categories(idCategory: UUID, obClause: ClauseObjectInput): [Category]
+
+  """
+
+  """
+  Clients(idClient: UUID, obClause: ClauseObjectInput): [Client]
+
+  """
+
+  """
+  Context: Context
+
+  """
+
+  """
+  Entities(idEntity: UUID, obClause: ClauseObjectInput): [Entity]
+
+  """
+
+  """
+  Files(
+    idFile: UUID
+    idRecord: UUID
+    idEntity: UUID
+    obClause: ClauseObjectInput
+  ): [File]
+
+  """
+
+  """
+  Goals(idGoal: UUID, obClause: ClauseObjectInput): [Goal]
+
+  """
+
+  """
+  Me: Admin
+
+  """
+
+  """
+  Projects(idProject: UUID, obClause: ClauseObjectInput): [Project]
+
+  """
+
+  """
+  Sections(idSection: UUID, obClause: ClauseObjectInput): [Section]
+
+  """
+
+  """
+  Segments(idSegment: UUID, obClause: ClauseObjectInput): [Segment]
+
+  """
+
+  """
+  Tags(idTag: UUID, idRecord: UUID): [Tag]
+
+  """
+
+  """
+  Token: Boolean
+}
+
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf)
+"""
+scalar JSON
+
+"""
+TitleAxisConfig
+"""
+type TitleAxisConfig {
+  """
+
+  """
+  align: String
+
+  """
+
+  """
+  text: String
+}
+
+"""
+
+"""
+enum ReportTypeEnum {
+  """
+
+  """
+  dashboard
+
+  """
+
+  """
+  presentation
+
+  """
+
+  """
+  infographic
+}
+
+"""
+
+"""
+input AdminObjectInput {
+  """
+
+  """
+  avatar: String
+}
+
+"""
+
+"""
+enum SortTypeEnum {
+  """
+
+  """
+  asc
+
+  """
+
+  """
+  desc
+}
+
+"""
+ItemStyleConfig
+"""
+type ItemStyleConfig {
+  """
+
+  """
+  color: String
+
+  """
+
+  """
+  fontSize: String
+}
+
+"""
+
+"""
+input WidgetConfigInput {
+  """
+
+  """
+  videoThumbnail: String
+
+  """
+  Deprecated: use yAxes instead
+  """
+  yAxis: YAxisInput
+
+  """
+
+  """
+  highlights: [HighlightInput]
+
+  """
+
+  """
+  videoId: String
+
+  """
+
+  """
+  cache: JSON
+
+  """
+
+  """
+  pointFormat: String
+
+  """
+
+  """
+  icon: String
+
+  """
+
+  """
+  rotation: Int
+
+  """
+
+  """
+  borderStyle: NullString = "{ false}"
+
+  """
+
+  """
+  backgroundPosition: NullString = "{ false}"
+
+  """
+
+  """
+  top: Float!
+
+  """
+
+  """
+  rowsLimit: Int
+
+  """
+
+  """
+  table: WidgetTableInput
+
+  """
+
+  """
+  orderBy: OrderByInput
+
+  """
+
+  """
+  font: FontInput
+
+  """
+
+  """
+  columns: [WidgetColumnInput]
+
+  """
+
+  """
+  max: Int
+
+  """
+
+  """
+  width: Float!
+
+  """
+
+  """
+  borderColor: NullString = "{ false}"
+
+  """
+
+  """
+  yAxes: [YAxisInput]
+
+  """
+
+  """
+  dataLabels: String
+
+  """
+
+  """
+  borderWidth: NullInt = "{{0 false}}"
+
+  """
+
+  """
+  backgroundSize: NullString = "{ false}"
+
+  """
+
+  """
+  file: NullUUID
+
+  """
+
+  """
+  videoType: String
+
+  """
+
+  """
+  legend: LegendInput
+
+  """
+
+  """
+  videoSrc: String
+
+  """
+
+  """
+  colorAxis: ColorAxisInput
+
+  """
+
+  """
+  selectedMetric: String
+
+  """
+
+  """
+  currentPage: Int
+
+  """
+
+  """
+  innerSize: String
+
+  """
+
+  """
+  height: Float!
+
+  """
+
+  """
+  videoUrl: String
+
+  """
+
+  """
+  controllers: [String]
+
+  """
+
+  """
+  backgroundColor: NullString = "{ false}"
+
+  """
+
+  """
+  color: String
+
+  """
+
+  """
+  series: [SerieInput]
+
+  """
+
+  """
+  left: Float!
+}
+
+"""
+
+"""
+input SelectObjectInput {
+  """
+
+  """
+  function: AggregateTypeEnum
+
+  """
+
+  """
+  alias: String
+
+  """
+
+  """
+  column: String!
+}
+
+"""
+
+"""
+input OptionInput {
+  """
+
+  """
+  idOption: UUID
+
+  """
+
+  """
+  dsOption: String!
+
+  """
+
+  """
+  stOption: RecordStatusEnum
+}
+
+"""
+
+"""
+input AnswerOptionInput {
+  """
+
+  """
+  idAnswer: UUID
+
+  """
+
+  """
+  idOption: UUID!
+}
+
+"""
+
+"""
+enum FieldTypeEnum {
+  """
+
+  """
+  category
+
+  """
+
+  """
+  date
+
+  """
+
+  """
+  radio
+
+  """
+
+  """
+  range
+
+  """
+
+  """
+  time
+
+  """
+
+  """
+  phone
+
+  """
+
+  """
+  text
+
+  """
+
+  """
+  boolean
+
+  """
+
+  """
+  checkbox
+
+  """
+
+  """
+  email
+
+  """
+
+  """
+  file
+
+  """
+
+  """
+  image
+
+  """
+
+  """
+  number
+}
+
+"""
+
+"""
+input ItemStyleInput {
+  """
+
+  """
+  fontSize: String
+
+  """
+
+  """
+  color: String
+}
+
+"""
+Item
+"""
+type Item {
+  """
+
+  """
+  dsPhrase: String!
+
+  """
+
+  """
+  dtCreated: DateTime!
+
+  """
+
+  """
+  dtUpdated: DateTime!
+
+  """
+
+  """
+  idConclusion: UUID!
+
+  """
+
+  """
+  idItem: UUID!
+
+  """
+
+  """
+  idPhrase: NullUUID
+}
+
+"""
+Segment
+"""
+type Segment {
+  """
+
+  """
+  SegmentTopics(idTopic: UUID, obClause: ClauseObjectInput): [Topic]
+
+  """
+
+  """
+  dsSegment: NullString
+
+  """
+
+  """
+  dtCreated: DateTime!
+
+  """
+
+  """
+  dtUpdated: DateTime!
+
+  """
+
+  """
+  idSegment: UUID!
+
+  """
+
+  """
+  nmSegment: String!
+
+  """
+
+  """
+  obSegment: JSON
+
+  """
+
+  """
+  stSegment: RecordStatusEnum!
+}
+
+"""
+Embed
+"""
+type Embed {
+  """
+
+  """
+  EmbedData(
+    flAggregation: Boolean = false
+    flRefresh: Boolean = false
+    obClause: ClauseObjectInput
+  ): JSON
+
+  """
+
+  """
+  dtCreated: DateTime!
+
+  """
+
+  """
+  dtUpdated: DateTime!
+
+  """
+
+  """
+  flLock: Boolean!
+
+  """
+
+  """
+  idEmbed: UUID!
+
+  """
+
+  """
+  idReport: UUID!
+
+  """
+
+  """
+  idSlide: UUID!
+
+  """
+
+  """
+  idWidget: UUID!
+
+  """
+
+  """
+  nbIndex: Int!
+
+  """
+
+  """
+  obConfig: WidgetConfig!
+}
+
+"""
+Conclusion
+"""
+type Conclusion {
+  """
+
+  """
+  ConclusionAnswer: [Answer]
+
+  """
+
+  """
+  ConclusionItems(idItem: UUID, obClause: ClauseObjectInput): [Item]
+
+  """
+
+  """
+  dtCreated: DateTime!
+
+  """
+
+  """
+  dtUpdated: DateTime!
+
+  """
+
+  """
+  idConclusion: UUID!
+
+  """
+
+  """
+  idOffice: UUID!
+
+  """
+
+  """
+  idProject: UUID!
+
+  """
+
+  """
+  idQuiz: UUID!
+
+  """
+
+  """
+  idReport: UUID!
+
+  """
+
+  """
+  idTopic: UUID!
+}
+
+"""
+
+"""
+input HighlightInput {
+  """
+
+  """
+  maskedValue: NullString = "{ false}"
+
+  """
+
+  """
+  complement: NullString = "{ false}"
+
+  """
+
+  """
+  field: NullString = "{ false}"
+
+  """
+
+  """
+  inverseComparison: NullBoolean = "{{false false}}"
+
+  """
+
+  """
+  precision: NullInt = "{{0 false}}"
+
+  """
+
+  """
+  comparisonValue: NullFloat = "{{0 false}}"
+
+  """
+
+  """
+  goal: NullFloat = "{{0 false}}"
+
+  """
+
+  """
+  index: NullInt = "{{0 false}}"
+
+  """
+
+  """
+  label: NullString = "{ false}"
+
+  """
+
+  """
+  rawValue: NullFloat = "{{0 false}}"
+
+  """
+
+  """
+  complementType: NullString = "{ false}"
+
+  """
+
+  """
+  abbreviation: NullString = "{ false}"
+}
+
+"""
+
+"""
+input EmbedBulkInput {
+  """
+
+  """
+  nbIndex: Int!
+
+  """
+
+  """
+  flLock: Boolean!
+
+  """
+
+  """
+  idEmbed: UUID!
+
+  """
+
+  """
+  obConfig: WidgetConfigInput!
+}
+
+"""
+
+"""
+input ConditionObjectInput {
+  """
+
+  """
+  value: JSON!
+
+  """
+
+  """
+  column: String!
+
+  """
+
+  """
+  operator: OperatorTypeEnum!
+}
+
+"""
+Context
+"""
+type Context {
+  """
+
+  """
+  ContextAdmin: Admin
 }
