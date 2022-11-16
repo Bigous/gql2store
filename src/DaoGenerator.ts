@@ -1,11 +1,20 @@
 import pluralize from 'pluralize';
 import { FileGenerator } from './FileGenerator';
-import { SDLObjectType, SDLProcessedSchema } from './types/definitions';
+import { GenConfig, SDLObjectType, SDLProcessedSchema } from './types/definitions';
 import { camel2kebab, camelize } from './utils';
 
 export class DaoGenerator extends FileGenerator {
 	folder = 'daos';
 	sufix = '.dao.ts';
+
+	generateFileFor(type: SDLObjectType, types: SDLProcessedSchema, config?: GenConfig): void {
+		// return it since has no exports
+		if (!type.queries.length && !type.parentTypes.filter(t => t.type.queries.length).length && !type.mutations.length) {
+			return;
+		}
+
+		super.generateFileFor(type, types, config);
+	}
 
 	getData(type: SDLObjectType, types: SDLProcessedSchema): string {
 		// Para o DAO, podemos pegar apenas os exports de cada type e gerar tudo... sem olhar o schema do Graphql, uma vez que os exports foram gerados baseados neles...
@@ -13,18 +22,18 @@ export class DaoGenerator extends FileGenerator {
 		const nameLower = name.toLowerCase();
 		const gqlType = type.exports[0];
 
-		const data =
+		let str =
 `import gql from 'graphql-tag';
 
 import { privateClient } from '@/apollo';${
 
-	type.dependantTypes.map(dep => {
-		if (dep.type.queries.length === 0) return '';
+	type.parentTypes.map(parent => {
+		if (parent.type.queries.length === 0) return '';
 
-		const importArgs = dep.type.exports.find(e => e.startsWith(`Get${pluralize(dep.type.name)}`));
-		const importName = camel2kebab(camelize(dep.type.name));
+		const importArgs = parent.type.exports.find(e => e.startsWith(`Get${pluralize(parent.type.name)}`));
+		const importName = camel2kebab(camelize(parent.type.name));
 
-		return `\nimport { ${importArgs} } from '@/schema/${importName}.schema';`;
+		return importArgs ? `\nimport { ${importArgs} } from '@/schema/${importName}.schema';` : '';
 	}).join('')
 
 }
@@ -41,13 +50,13 @@ ${
 		const funcName = camelize('Get ' + query.gqlQueryName);
 
 		return `
-	${funcName}(variables) {
+	${funcName}(variables) {${query.argsName ? `
 		const { gqlArgs, gqlParams } = parseArgsGQL([${query.argsName}]);
 		const [${camelize(type.name)}Params] = gqlParams;
-
+` : ''}
 		const qry = gql\`
-			query ${funcName}(\${gqlArgs}) {
-				${query.gqlQueryName}(\${${camelize(type.name)}Params}) {
+			query ${funcName}${query.argsName ? `(\${gqlArgs})` : ''} {
+				${query.gqlQueryName}${query.argsName ? `(\${${camelize(type.name)}Params})`: ''} {
 					\${${gqlType}}
 				}
 			}
@@ -59,25 +68,32 @@ ${
 
 }${
 
-	type.dependantTypes.map(dep => {
-		// Se o dependente não tem query, não precisamos gerar o método.
-		if (dep.type.queries.length === 0) return '';
+	type.parentTypes.map(parent => {
+		// TODO: apenas faz o get pelo parent se o id do mesmo estiver presente no type
+		// Se o parent não tem query, não precisamos gerar o método.
+		if (parent.type.queries.length === 0) return '';
 
-		const dependentName = dep.type.name;
-		const funcName = camelize('Get ' + dependentName + ' ' + pluralize(type.name));
-		const gqlName = dep.type.queries[0].gqlQueryName;
-		const tExp = type.exports.find(e => e.startsWith(`Get${pluralize(type.name)}`));
-		const dExp = dep.type.exports.find(e => e.startsWith(`Get${pluralize(dep.type.name)}`));
+		const ParentName = parent.type.name;
+		const funcName = camelize('Get ' + ParentName + ' ' + pluralize(type.name));
+		const gqlName = parent.type.queries[0].gqlQueryName;
+
+		const ParentQueryArgs = parent.type.exports.find(e => e.startsWith(`Get${pluralize(parent.type.name)}`));
+		const QueryArgs = type.exports.find(e => e.startsWith(`Get${pluralize(type.name)}`));
+
+		const args = [
+			{ args: ParentQueryArgs, params: `${camelize(parent.type.name)}Params` },
+			{ args: QueryArgs, params: `${camelize(type.name)}Params` },
+		].filter(v => v.args);
 
 		return `
-	${funcName}(variables) {
-		const { gqlArgs, gqlParams } = parseArgsGQL([${dExp}, ${tExp}]);
-		const [${camelize(dep.type.name)}Params, ${camelize(type.name)}Params] = gqlParams;
-
+	${funcName}(variables) {${args.length ? `
+		const { gqlArgs, gqlParams } = parseArgsGQL([${args.map(v => v.args).join(', ')}]);
+		const [${args.map(v => v.params).join(', ')}] = gqlParams;
+` : ''}
 		const qry = gql\`
-			query ${funcName}(\${gqlArgs}) {
-				${gqlName}(\${${camelize(dep.type.name)}Params}) {
-					${dep.fieldName}(\${${camelize(type.name)}Params}) {
+			query ${funcName}${args.length ? `(\${gqlArgs})` : ''} {
+				${gqlName}${ParentQueryArgs ? `(\${${camelize(parent.type.name)}Params})` : ''} {
+					${parent.fieldName}${QueryArgs ? `(\${${camelize(type.name)}Params})` : ''} {
 						\${${gqlType}}
 					}
 				}
@@ -95,13 +111,13 @@ ${
 		const gqlName = e.gqlMutationName;
 
 		return `
-	${funcName}(variables) {
+	${funcName}(variables) {${e.argsName ? `
 		const { gqlArgs, gqlParams } = parseArgsGQL([${e.argsName}]);
 		const [${camelize(type.name)}Params] = gqlParams;
-
+` : ''}
 		const qry = gql\`
-			mutation ${funcName}(\${gqlArgs}) {
-				${gqlName}(\${${camelize(type.name)}Params}) {
+			mutation ${funcName}${e.argsName ? `(\${gqlArgs})` : ''} {
+				${gqlName}${e.argsName ? `(\${${camelize(type.name)}Params})` : ''} {
 					\${${gqlType}}
 				}
 			}
@@ -115,6 +131,6 @@ ${
 };
 `;
 
-		return data;
+		return str;
 	}
 }

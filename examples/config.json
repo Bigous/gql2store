@@ -1,0 +1,35 @@
+{
+	"stores": {
+		"inlcludeInIndex": [
+			"async-list",
+			"auth"
+		]
+	},
+	"daos": {
+		"byType": [
+			["Category", { "genDaoObject": ["getCategories"] }],
+			["Client", { "genDaoObject": ["getClients"] }],
+			["Office", { "genDaoObject": ["getClientOffices"] }],
+			["Project", { "genDaoObject": ["getProjects"] }],
+			["Quiz", { "genDaoObject": ["getProjectQuizzes"] }],
+			["Report", { "genDaoObject": ["getProjectReports"] }],
+			["SalesPlan", { "genDaoObject": ["getSalesPlans"] }],
+			["Slide", { "genDaoObject": ["getProjectReportSlides"] }],
+			["Topic", { "genDaoObject": ["getSectionTopics"] }]
+		]
+	},
+	"schemas": {
+		"byType": [
+			["WidgetConfig", { "inlineChildren": true }]
+		]
+	},
+	"types": {
+		"byType": [
+			["WidgetConfig", { "shareFileWithChildren": true }]
+		],
+		"inlcludeInIndex": [
+			"gql-input",
+			"shared"
+		]
+	}
+}

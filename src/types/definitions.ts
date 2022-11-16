@@ -1,22 +1,22 @@
 import { GraphQLEnumType, GraphQLInputObjectType, GraphQLInterfaceType, GraphQLObjectType, GraphQLScalarType, GraphQLUnionType } from 'graphql';
 
-export interface SDLDependency {
+export interface SDLChild {
 	fieldName: string;
 	typeName: string;
 }
 
-export interface SDLDependant {
-	type: SDLObjectType;
+export interface SDLParent {
 	fieldName: string;
+	type: SDLObjectType;
 }
 
 export interface SDLObjectType extends GraphQLObjectType {
 	id?:string;
-	dependencies: SDLDependency[];
-	dependantTypes: SDLDependant[];
+	children: SDLChild[];
+	parentTypes: SDLParent[];
 	exports: string[];
-	queries: { gqlQueryName: string, argsName: string }[];
-	mutations: { gqlMutationName: string, argsName: string }[];
+	queries: { gqlQueryName: string, argsName?: string }[];
+	mutations: { gqlMutationName: string, argsName?: string }[];
 }
 
 export interface SDLScalarTypeMap { [name: string]: GraphQLScalarType }
@@ -39,4 +39,21 @@ export interface SDLProcessedSchema {
 
 export interface SDLGenerator {
 	generateFileFor(type: SDLObjectType, types: SDLProcessedSchema): void;
+}
+
+export interface GenTypeConfig {
+	inlineChildren?: boolean;
+	genDaoObject?: string[]; // functions that will have dao obj
+	shareFileWithChildren?: boolean;
+}
+
+export interface GenFileConfig {
+	byType?: [string, GenTypeConfig][];
+	inlcludeInIndex?: string[];
+}
+
+export interface GenConfig {
+
+	schemas?: GenFileConfig,
+	types?: GenFileConfig,
 }

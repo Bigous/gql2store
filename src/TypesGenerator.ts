@@ -4,8 +4,8 @@ import { existsSync, mkdirSync, writeFile } from 'node:fs';
 import { GraphQLEnumType, GraphQLList, GraphQLNonNull, GraphQLObjectType, GraphQLScalarType } from 'graphql';
 
 import { FileGenerator } from './FileGenerator';
-import { SDLObjectType, SDLProcessedSchema } from './types/definitions';
-import { camel2kebab } from './utils';
+import { GenConfig, SDLObjectType, SDLProcessedSchema } from './types/definitions';
+import { camel2kebab, getRootParentsConfigByType, getConfigByType } from './utils';
 
 const scalarMap: { [key: string]: string } = {
 	'JSON': 'any',
@@ -26,60 +26,103 @@ export class TypesGenerator extends FileGenerator {
 	folder = 'types';
 	sufix = '.d.ts';
 
-	getData(type: SDLObjectType, types: SDLProcessedSchema) {
-		const typeDependences: Array<string> = [];
-		let useEnums = false;
+	generateFileFor(type: SDLObjectType, types: SDLProcessedSchema, config?: GenConfig): void {
+		// this type will be declarated in root type
+		if (getRootParentsConfigByType(type, config?.types).some(t => t.shareFileWithChildren)) {
+			return;
+		}
 
+		super.generateFileFor(type, types, config);
+	}
+
+	createInterface(type: SDLObjectType, types: SDLProcessedSchema) {
 		const typeFields = type.getFields();
 
-		const interfaceMembers = Object.keys(typeFields).map(fieldName => {
-			const field = typeFields[fieldName];
+		let useEnums = false;
+		const children: SDLObjectType[] = [];
 
-			const nonNull = field.type instanceof GraphQLNonNull;
+		const tsFields = Object.keys(typeFields).map(fieldName => {
+			const field = typeFields[fieldName];
 
 			const fieldType = field.type instanceof GraphQLNonNull && 'ofType' in field.type
 				? field.type.ofType
 				: field.type;
 
-			let fieldTypeName = '';
+			let tsType = 'any';
 
 			if (fieldType instanceof GraphQLList) {
-				fieldTypeName = 'string[]'; // por definição é sempre string, mas poderia retornar o tipo correto ou string.
+				tsType = 'string[]'; // por definição é sempre string, mas poderia retornar o tipo correto ou string.
 			} else if (fieldType instanceof GraphQLObjectType) {
-				fieldTypeName = fieldType.name;
-				typeDependences.push(fieldTypeName);
+				tsType = fieldType.name;
+				children.push(types.objects[tsType]);
 			} else if (fieldType instanceof GraphQLScalarType) {
-				fieldTypeName = scalarMap[fieldType.name] || fieldType.name;
+				tsType = scalarMap[fieldType.name] || fieldType.name;
 			} else if (fieldType instanceof GraphQLEnumType) {
-				fieldTypeName = `valueof<typeof enums.${fieldType.name.replace('Enum', 'Types')}>`;
+				tsType = `valueof<typeof enums.${fieldType.name.replace('Enum', 'Types')}>`;
 				useEnums = true;
 			}
 
-			return `\t${fieldName}${nonNull ? '' : '?'}: ${fieldTypeName};`;
+			return `\t${fieldName}${field.type instanceof GraphQLNonNull ? '' : '?'}: ${tsType};`;
 		});
 
-		const data =
-`${
-	useEnums ?
-		`import enums from '@/enum/enum';
-import { valueof } from './shared.d';
+		const interfaceDeclaration = `export interface ${type.name} {\n${tsFields.join('\n')}\n}\n`
 
-` : ''
-}${
-
-	typeDependences.map(typeName =>
-		`import { ${typeName} } from './${camel2kebab(typeName)}.d';\n`
-	).join('') + (typeDependences.length ? '\n' : '')
-
-}export interface ${type.name} {
-${interfaceMembers.join('\n')}
-}
-`;
-
-		return data;
+		return { interfaceDeclaration, useEnums, children };
 	}
 
-	generateIndexFor(types: SDLProcessedSchema) {
+	createInterfaceRecursive(type: SDLObjectType, types: SDLProcessedSchema) {
+		let useEnums = false;
+		const { interfaceDeclaration, children, useEnums: tUseEnums } = this.createInterface(type, types);
+		useEnums = tUseEnums;
+
+		const childrenDeclr: string = children.length
+			? children.map(c => {
+				const { declarations, useEnums: cUseEnums } = this.createInterfaceRecursive(c, types);
+				useEnums = cUseEnums || useEnums;
+
+				return declarations;
+			}).join('\n') + '\n'
+			: '';
+
+		return { declarations: `${childrenDeclr}${interfaceDeclaration}`, useEnums };
+	}
+
+	getData(type: SDLObjectType, types: SDLProcessedSchema, config?: GenConfig) {
+		const typeConfig = getConfigByType(type, config?.types);
+
+		let useEnums = false;
+		let strDeclarations = ''; // created to concat declarations only after imports
+
+		if (typeConfig?.shareFileWithChildren) {
+			const { declarations, useEnums: typeUseEnums } = this.createInterfaceRecursive(type, types);
+			useEnums = typeUseEnums;
+			strDeclarations += declarations;
+		} else {
+			const { interfaceDeclaration, children, useEnums: typeUseEnums } = this.createInterface(type, types);
+			useEnums = typeUseEnums;
+
+			if (children.length) {
+				strDeclarations += children.map(child =>
+					`import { ${child.name} } from './${camel2kebab(child.name)}.d';\n`
+				).join('') + '\n';
+			}
+
+			strDeclarations += interfaceDeclaration;
+		}
+
+
+		let str = useEnums ?
+`import enums from '@/enum/enum';
+import { valueof } from './shared.d';
+
+` : '';
+
+		str += strDeclarations;
+
+		return str;
+	}
+
+	generateIndexFor(types: SDLProcessedSchema, config?: GenConfig) {
 		const p = path.join(process.cwd(), 'tmp', 'types');
 
 		if (!existsSync(p)) {
@@ -87,19 +130,19 @@ ${interfaceMembers.join('\n')}
 			mkdirSync(p, { recursive: true });
 		}
 
-		const orderedTypeNames = Object.keys(types.objects).sort();
+		const orderedTypeNames = [
+			...Object.keys(types.objects),
+			...(config?.types?.inlcludeInIndex || []),
+		].map(camel2kebab).sort(); // camel2kebab before sort to ensure it
 
-		const data =
-`${
-	orderedTypeNames.map(typeName =>
-		`export * from './${camel2kebab(typeName)}.d';\n`
+		const data = `${
+	orderedTypeNames.map(kebabName =>
+		`export * from './${kebabName}.d';\n`
 	).join('')
 }`;
 
 		writeFile(path.join(p, 'index.ts'), data, 'utf8', (err) => {
-			if (err) {
-				console.log('Error writing file: ' + err);
-			}
+			if (err) console.log('Error writing file: ' + err);
 		});
 	}
 }

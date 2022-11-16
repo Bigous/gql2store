@@ -1,57 +1,64 @@
-import { buildSchema, GraphQLObjectType, GraphQLList, GraphQLInterfaceType, GraphQLUnionType, GraphQLScalarType, GraphQLEnumType, GraphQLInputObjectType } from 'graphql';
+import { buildSchema, GraphQLObjectType, GraphQLList, GraphQLInterfaceType, GraphQLUnionType, GraphQLScalarType, GraphQLEnumType, GraphQLInputObjectType, GraphQLNonNull } from 'graphql';
 import { readFileSync } from 'node:fs';
 
 import { SDLObjectType, SDLObjectTypeMap, SDLProcessedSchema } from './types/definitions';
+import { objectFromField } from './utils';
 
 
-function generateDependeciyRelations(objects: SDLObjectTypeMap): void {
-	const ok = Object.keys(objects);
-	ok.forEach(typeName => {
-		const type = objects[typeName];
+function generateChildrenRelations(types: SDLObjectTypeMap): void {
+	const typeNames = Object.keys(types);
+
+	typeNames.forEach(typeName => {
+		const type = types[typeName];
 		const fields = type.getFields();
-		type.dependencies = Object.keys(fields).filter(element => {
-			const t = fields[element].type;
-			return (t instanceof GraphQLObjectType) || (t instanceof GraphQLList);
-		}).map(element => {
-			return {
-				fieldName: element,
-				typeName: (fields[element].type instanceof GraphQLObjectType ? (fields[element].type as SDLObjectType).name : (fields[element].type as GraphQLList<GraphQLObjectType>).ofType.name) || ''
-			};
-		});
+
+		type.children = Object.keys(fields)
+			.filter(fieldName => {
+				return objectFromField(fields[fieldName].type);
+			})
+			.map(fieldName => {
+				return {
+					fieldName,
+					typeName: objectFromField(fields[fieldName].type)?.name || ''
+				};
+			});
 	});
 }
 
-function generateCrossReference(objects: SDLObjectTypeMap): void {
-	const ok = Object.keys(objects);
-	ok.forEach(typeName1 => {
-		const type = objects[typeName1];
-		type.dependantTypes = [];
-		ok.forEach(typeName2 => {
+function generateCrossReference(types: SDLObjectTypeMap): void {
+	const typeNames = Object.keys(types);
+
+	typeNames.forEach(typeName1 => {
+		const type1 = types[typeName1];
+		type1.parentTypes = [];
+
+		typeNames.forEach(typeName2 => {
 			if (typeName1 !== typeName2) {
-				const type2 = objects[typeName2];
-				const depandant = type2.dependencies.find(i => i.typeName === typeName1);
-				if (depandant) {
-					type.dependantTypes.push({ type: type2, fieldName: depandant.fieldName });
+				const type2 = types[typeName2];
+				const parent = type2.children.find(i => i.typeName === typeName1);
+
+				if (parent) {
+					type1.parentTypes.push({ type: type2, fieldName: parent.fieldName });
 				}
 			}
 		});
 	});
 }
 
-function generateFragments(objects: SDLObjectTypeMap): void {
-	const ok = Object.keys(objects);
+function generateFragments(types: SDLObjectTypeMap): void {
+	const ok = Object.keys(types);
 	// TODO: need to be correctly implemented
 	ok.forEach(typeName => {
-		const type = objects[typeName];
+		const type = types[typeName];
 
 		const fields = Object.keys(type.getFields()).filter(fieldName => {
 			const field = type.getFields()[fieldName];
 			let typeField = undefined;
 
 			if (field.type instanceof GraphQLObjectType) {
-				typeField = objects[fieldName];
+				typeField = types[fieldName];
 			} else if (field.type instanceof GraphQLList && field.type.ofType instanceof GraphQLObjectType) {
-				typeField = objects[field.type.ofType.name];
+				typeField = types[field.type.ofType.name];
 			} else {
 				return false;
 			}
@@ -91,20 +98,11 @@ export function loadSchema(sdlFileName: string): SDLProcessedSchema {
 				} else if (type.name == 'PrivateMutation') {
 					types.PrivateMutation = type;
 				} else {
-					if (!object.exports)
-						object.exports = [];
-
-					if (!object.queries)
-						object.queries = [];
-
-					if (!object.mutations)
-						object.mutations = [];
-
-					if (!object.dependencies)
-						object.dependencies = [];
-
-					if (!object.dependantTypes)
-						object.dependantTypes = [];
+					if (!object.exports) object.exports = [];
+					if (!object.queries) object.queries = [];
+					if (!object.mutations) object.mutations = [];
+					if (!object.children) object.children = [];
+					if (!object.parentTypes) object.parentTypes = [];
 
 					types.objects[type.name] = object;
 				}
@@ -122,7 +120,7 @@ export function loadSchema(sdlFileName: string): SDLProcessedSchema {
 		}
 	});
 
-	generateDependeciyRelations(types.objects);
+	generateChildrenRelations(types.objects);
 	generateCrossReference(types.objects);
 	generateFragments(types.objects);
 
