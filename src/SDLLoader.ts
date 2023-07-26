@@ -1,7 +1,7 @@
 import { buildSchema, GraphQLObjectType, GraphQLList, GraphQLInterfaceType, GraphQLUnionType, GraphQLScalarType, GraphQLEnumType, GraphQLInputObjectType, GraphQLNonNull } from 'graphql';
 import { readFileSync } from 'node:fs';
 
-import { SDLObjectType, SDLObjectTypeMap, SDLProcessedSchema } from './types/definitions';
+import { GenConfig, SDLObjectType, SDLObjectTypeMap, SDLProcessedSchema } from './types/definitions';
 import { objectFromField } from './utils';
 
 
@@ -73,7 +73,7 @@ function generateFragments(types: SDLObjectTypeMap): void {
  * @param sdlFileName File with the GraphQL Schema Definition.
  * @returns SDLProcessedSchema with the processed schema.
  */
-export function loadSchema(sdlFileName: string): SDLProcessedSchema {
+export function loadSchema(sdlFileName: string, config?: GenConfig): SDLProcessedSchema {
 	const schema = buildSchema(readFileSync(sdlFileName, 'utf8'));
 
 	const types: SDLProcessedSchema = {
@@ -93,9 +93,9 @@ export function loadSchema(sdlFileName: string): SDLProcessedSchema {
 		if (!type.name.startsWith('__')) {
 			if (type instanceof GraphQLObjectType) {
 				const object: SDLObjectType = type as SDLObjectType;
-				if (object.name == 'PrivateQuery') {
+				if (object.name == config?.queriesType) {
 					types.PrivateQuery = type;
-				} else if (type.name == 'PrivateMutation') {
+				} else if (type.name == config?.mutationsType) {
 					types.PrivateMutation = type;
 				} else {
 					if (!object.exports) object.exports = [];

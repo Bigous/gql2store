@@ -50,9 +50,15 @@ export interface GenTypeConfig {
 export interface GenFileConfig {
 	byType?: [string, GenTypeConfig][];
 	inlcludeInIndex?: string[];
+
+	translationObject?: {
+		fields?: string[];
+	}
 }
 
 export interface GenConfig {
+	queriesType: string;
+	mutationsType: string;
 
 	schemas?: GenFileConfig,
 	types?: GenFileConfig,

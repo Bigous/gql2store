@@ -1,10 +1,14 @@
 {
+	"queriesType": "Query",
+	"mutationsType": "Mutation",
+
 	"stores": {
 		"inlcludeInIndex": [
 			"async-list",
 			"auth"
 		]
 	},
+
 	"daos": {
 		"byType": [
 			["Category", { "genDaoObject": ["getCategories"] }],
@@ -18,11 +22,24 @@
 			["Topic", { "genDaoObject": ["getSectionTopics"] }]
 		]
 	},
+
 	"schemas": {
 		"byType": [
 			["WidgetConfig", { "inlineChildren": true }]
-		]
+		],
+		"translationObject": {
+			"fields": [
+				"dsAttribute",
+				"dsCategory",
+				"dsDeliverable",
+				"nmDeliverable",
+				"dsOption",
+				"dsProject",
+				"dsTitle"
+			]
+		}
 	},
+
 	"types": {
 		"byType": [
 			["WidgetConfig", { "shareFileWithChildren": true }]

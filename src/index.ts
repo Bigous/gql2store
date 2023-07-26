@@ -40,10 +40,10 @@ if (existsSync(sdlPath)) {
 function generateFilesFrom(sdlPath: string, configPath?: string) {
 	console.log('Processing schema at: ' + sdlPath);
 
-	const processedSchema = loadSchema(sdlPath);
-
 	const configRaw = configPath && readFileSync(configPath, 'utf8');
 	const config = configRaw ? JSON.parse(configRaw) as GenConfig : undefined;
+
+	const processedSchema = loadSchema(sdlPath, config);
 
 	const types = Object.values(processedSchema.objects);
 	const typeNames = Object.keys(processedSchema.objects);
